@@ -1,0 +1,1 @@
+java -jar -Dlog4j2.configurationFile=log4j2.properties atworker.jar

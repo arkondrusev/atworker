@@ -1,2 +1,4 @@
-dev/idea/
+dev/.idea/
 dev/target/
+.gitignore
+.git/

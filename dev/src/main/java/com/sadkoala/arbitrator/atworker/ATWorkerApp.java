@@ -34,6 +34,9 @@ public class ATWorkerApp {
         if (workerDbConnection == null) {
             return;
         }
+        DbHelper.initStatements();
+
+        DbHelper.logMessage("At-worker started");
 
         // установление подключения к binance
         webSocket = startSocket();

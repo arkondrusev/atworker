@@ -25,12 +25,12 @@ public class ATWorkerApp {
 
         log.info("At-worker started");
 
-        monitorDbConnection = connectMonitorDB();
+        connectMonitorDB();
         if (monitorDbConnection == null) {
             return;
         }
 
-        workerDbConnection = connectWorkerDB();
+        connectWorkerDB();
         if (workerDbConnection == null) {
             return;
         }
@@ -80,29 +80,27 @@ public class ATWorkerApp {
         return connection;
     }
 
-    private static Connection connectMonitorDB() {
+    private static void connectMonitorDB() {
         // установление ro-подключения к monitor-db
         String monitorDbPath = "persistent_files\\at-monitor.db";
-        Connection monitorConnection = connectDB(monitorDbPath, true);
-        if (monitorConnection == null) {
+        monitorDbConnection = connectDB(monitorDbPath, true);
+        if (monitorDbConnection == null) {
             log.error("Could not connect to monitor DB at {" + monitorDbPath + "}" );
             log.fatal("At-worker app failed");
         } else {
             log.info("Monitor DB connected {" + monitorDbPath + "}");
         }
-        return monitorConnection;
     }
 
-    private static Connection connectWorkerDB() {
+    private static void connectWorkerDB() {
         String workerDbPath = "persistent_files\\at-worker.db";
-        Connection workerConnection = connectDB(workerDbPath, false);
-        if (workerConnection == null) {
+        workerDbConnection = connectDB(workerDbPath, false);
+        if (workerDbConnection == null) {
             log.error("Could not connect to worker DB at {" + workerDbPath + "}" );
             log.fatal("At-worker app failed");
         } else {
             log.info("Worker DB connected {" + workerDbPath + "}");
         }
-        return workerConnection;
     }
 
     private static void disconnectWorkerDB() {

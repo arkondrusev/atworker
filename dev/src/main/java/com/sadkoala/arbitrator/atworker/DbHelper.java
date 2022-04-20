@@ -22,6 +22,19 @@ public class DbHelper {
         }
     }
 
+    public static void releaseStatements() {
+        releaseStatement(insertLogMessagePrepared);
+    }
+
+    private static void releaseStatement(PreparedStatement statement) {
+        if (statement != null) {
+            try {
+                statement.close();
+            } catch (SQLException e) {
+                log.error(e);
+            }
+        }
+    }
 
     public static void logMessage(String msg, String tags, long timestamp) {
         try {
@@ -29,6 +42,7 @@ public class DbHelper {
             insertLogMessagePrepared.setString(2, tags);
             insertLogMessagePrepared.setString(3, msg);
             insertLogMessagePrepared.executeUpdate();
+            ATWorkerApp.workerDbConnection.commit();
         } catch (SQLException e) {
             log.error(e);
         }

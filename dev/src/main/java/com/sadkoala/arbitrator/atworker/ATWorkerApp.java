@@ -62,6 +62,7 @@ public class ATWorkerApp {
 
         disconnectWorkerDB();
         disconnectMonitorDB();
+        DbHelper.releaseStatements();
 
         log.info("At-worker finished");
 

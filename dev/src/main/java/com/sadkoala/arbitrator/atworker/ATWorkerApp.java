@@ -10,7 +10,6 @@ import java.net.http.WebSocket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 public class ATWorkerApp {
@@ -42,10 +41,13 @@ public class ATWorkerApp {
         webSocket = startSocket();
         if (webSocket == null) {
             log.error("Could not open websocket connection");
+            DbHelper.logMessage("Could not open websocket connection");
             log.fatal("At-worker app failed");
+            DbHelper.logMessage("At-worker app failed");
             return;
         }
         log.info("Websocket connection is open");
+        DbHelper.logMessage("Websocket connection is open");
 
 
 
@@ -58,8 +60,10 @@ public class ATWorkerApp {
 
 
         webSocket.abort();
+        DbHelper.logMessage("Websocket connection closed");
         log.info("Websocket connection closed");
 
+        DbHelper.logMessage("At-worker going to finish. Disconnecting from databases");
         disconnectWorkerDB();
         disconnectMonitorDB();
         DbHelper.releaseStatements();
@@ -129,14 +133,7 @@ public class ATWorkerApp {
 
     public static WebSocket startSocket() {
 
-        WebSocket.Listener wsListener = new WebSocket.Listener() {
-            @Override
-            public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-                log.info(data);
-                webSocket.request(1);
-                return null;
-            }
-        };
+        WebSocket.Listener wsListener = new SocketListener();
 
         String wsUri = "wss://stream.binance.com:9443/ws/btcusdt@bookTicker";
 

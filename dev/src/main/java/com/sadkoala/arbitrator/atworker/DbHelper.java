@@ -1,5 +1,6 @@
 package com.sadkoala.arbitrator.atworker;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +19,7 @@ public class DbHelper {
         try {
             insertLogMessagePrepared = ATWorkerApp.workerDbConnection.prepareStatement(SQL_INSERT_LOG_MESSAGE);
         } catch (SQLException e) {
-            log.error(e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -31,7 +32,7 @@ public class DbHelper {
             try {
                 statement.close();
             } catch (SQLException e) {
-                log.error(e);
+                log.error(ExceptionUtils.getStackTrace(e));
             }
         }
     }
@@ -44,7 +45,7 @@ public class DbHelper {
             insertLogMessagePrepared.executeUpdate();
             ATWorkerApp.workerDbConnection.commit();
         } catch (SQLException e) {
-            log.error(e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
     }
 

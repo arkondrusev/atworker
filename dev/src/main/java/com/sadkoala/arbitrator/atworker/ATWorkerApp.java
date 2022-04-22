@@ -1,5 +1,6 @@
 package com.sadkoala.arbitrator.atworker;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteConfig;
@@ -19,6 +20,8 @@ public class ATWorkerApp {
     public static Connection monitorDbConnection = null;
     public static Connection workerDbConnection = null;
     public static WebSocket webSocket = null;
+
+
 
     public static void main(String[] args) {
 
@@ -54,7 +57,7 @@ public class ATWorkerApp {
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
-            log.error(e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
 
 
@@ -83,7 +86,7 @@ public class ATWorkerApp {
             connection = DriverManager.getConnection(url, config.toProperties());
             connection.setAutoCommit(false);
         } catch (SQLException e) {
-            log.error(e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         return connection;
     }
@@ -126,7 +129,7 @@ public class ATWorkerApp {
         try {
             monitorDbConnection.close();
         } catch (SQLException e) {
-            log.error(e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
         log.info("Monitor DB disconnected");
     }
@@ -135,7 +138,7 @@ public class ATWorkerApp {
 
         WebSocket.Listener wsListener = new SocketListener();
 
-        String wsUri = "wss://stream.binance.com:9443/ws/btcusdt@bookTicker";
+        String wsUri = "wss://stream.binance.com:9443/stream?streams=btcusdt@bookTicker/adausdt@bookTicker/adabtc@bookTicker";
 
         WebSocket webSocket = null;
         try {
@@ -143,7 +146,7 @@ public class ATWorkerApp {
                     .newWebSocketBuilder().buildAsync(URI.create(wsUri), wsListener)
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            log.error(e);
+            log.error(ExceptionUtils.getStackTrace(e));
         }
 
         return webSocket;

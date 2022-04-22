@@ -1,15 +1,15 @@
 package com.sadkoala.arbitrator.atworker;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PairBookTickersHolder {
 
-    public static List pairBookTickers = new ArrayList();
+    public static Map pairBookTickers = new HashMap();
     static {
-        pairBookTickers.add(new PairBookTicker("btcusdt"));
-        pairBookTickers.add(new PairBookTicker("adabtc"));
-        pairBookTickers.add(new PairBookTicker("adausdt"));
+        pairBookTickers.put("btcusdt", new PairBookTicker("btcusdt"));
+        pairBookTickers.put("adabtc", new PairBookTicker("adabtc"));
+        pairBookTickers.put("adausdt", new PairBookTicker("adausdt"));
     }
 
 }

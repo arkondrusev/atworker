@@ -56,20 +56,20 @@ public class ATWorkerApp {
 
         // start save prices to db thread
         Thread savePricesThread = new Thread(() -> {
+            long timestamp;
             while (true) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     log.error(ExceptionUtils.getStackTrace(e));
                 }
 
                 final Collection<PairBookTicker> values = PairBookTickersHolder.pairBookTickers.values();
+                timestamp = System.currentTimeMillis();
                 for (PairBookTicker value : values) {
-                    log.info(value.getPairName() + " ask: " + value.getBestAskPrice() + " bid: " + value.getBestBidPrice());
+                    DbHelper.insertPairPrice(timestamp, value.getPairName(), value.getBestAskPrice(), value.getBestBidPrice());
                 }
-
             }
-
         });
         savePricesThread.start();
 

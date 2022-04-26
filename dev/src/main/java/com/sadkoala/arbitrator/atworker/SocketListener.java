@@ -13,16 +13,16 @@ public class SocketListener implements WebSocket.Listener {
 
     private static final Logger log = LogManager.getLogger(SocketListener.class);
 
-    public static ObjectMapper mapper = new ObjectMapper();
+    private static ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
         webSocket.request(1);
-        log.info(data);
         try {
-            JsonNode jsonNode = mapper.readTree(data.toString());
-            PairBookTicker ticker = mapper.readValue(jsonNode.get("data").toString(), PairBookTicker.class);
-            log.info(ticker.getPairName() + " " + ticker.getUpdateTimestamp());
+            JsonNode tree = mapper.readTree(data.toString());
+            String pair = tree.get("stream").textValue().split("@")[0];
+            PairBookTicker ticker = mapper.readValue(tree.get("data").toString(), PairBookTicker.class);
+            PairBookTickersHolder.pairBookTickers.put(pair, ticker);
         } catch (Exception e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }

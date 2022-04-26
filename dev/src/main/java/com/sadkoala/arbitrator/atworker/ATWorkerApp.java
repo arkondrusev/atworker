@@ -11,6 +11,7 @@ import java.net.http.WebSocket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 public class ATWorkerApp {
@@ -53,14 +54,30 @@ public class ATWorkerApp {
         DbHelper.logMessage("Websocket connection is open");
 
 
+        // start save prices to db thread
+        Thread savePricesThread = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    log.error(ExceptionUtils.getStackTrace(e));
+                }
+
+                final Collection<PairBookTicker> values = PairBookTickersHolder.pairBookTickers.values();
+                for (PairBookTicker value : values) {
+                    log.info(value.getPairName() + " ask: " + value.getBestAskPrice() + " bid: " + value.getBestBidPrice());
+                }
+
+            }
+
+        });
+        savePricesThread.start();
 
         try {
-            Thread.sleep(5000);
+            savePricesThread.join();
         } catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }
-
-
 
         webSocket.abort();
         DbHelper.logMessage("Websocket connection closed");

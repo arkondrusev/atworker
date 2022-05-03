@@ -1,5 +1,6 @@
 package com.sadkoala.arbitrator.atworker;
 
+import com.sadkoala.arbitrator.atworker.thread.ManagerTask;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,8 +23,6 @@ public class ATWorkerApp {
     public static Connection workerDbConnection = null;
     public static WebSocket webSocket = null;
 
-
-
     public static void main(String[] args) {
 
         log.info("At-worker started");
@@ -41,18 +40,8 @@ public class ATWorkerApp {
 
         DbHelper.logMessage("At-worker started");
 
-        // установление подключения к binance
-        webSocket = startSocket();
-        if (webSocket == null) {
-            log.error("Could not open websocket connection");
-            DbHelper.logMessage("Could not open websocket connection");
-            log.fatal("At-worker app failed");
-            DbHelper.logMessage("At-worker app failed");
-            return;
-        }
-        log.info("Websocket connection is open");
-        DbHelper.logMessage("Websocket connection is open");
-
+        Thread managerThread = new Thread(new ManagerTask());
+        managerThread.start();
 
         // start save prices to db thread
         Thread savePricesThread = new Thread(() -> {
@@ -74,7 +63,7 @@ public class ATWorkerApp {
         savePricesThread.start();
 
         try {
-            savePricesThread.join();
+            managerThread.join();
         } catch (InterruptedException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }

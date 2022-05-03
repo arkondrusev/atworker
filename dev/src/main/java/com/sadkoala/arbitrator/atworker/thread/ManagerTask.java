@@ -43,8 +43,6 @@ public class ManagerTask implements Runnable {
     }
 
     private void checkWebsocket() {
-        log.info("test=" + (webSocket == null || webSocket.isInputClosed())
-        );
         if (webSocket == null || webSocket.isInputClosed()) {
             DbHelper.logMessage("Websocket not working");
             log.info("Websocket not working");

@@ -12,7 +12,6 @@ import java.net.http.WebSocket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 public class ATWorkerApp {
@@ -53,10 +52,11 @@ public class ATWorkerApp {
                     log.error(ExceptionUtils.getStackTrace(e));
                 }
 
-                final Collection<PairBookTicker> values = PairBookTickersHolder.pairBookTickers.values();
-                timestamp = System.currentTimeMillis();
-                for (PairBookTicker value : values) {
-                    DbHelper.insertPairPrice(timestamp, value.getPairName(), value.getBestAskPrice(), value.getBestBidPrice());
+                if (PairBookTickersHolder.isUpdated()) {
+                    PairBookTickersSnapshop snapshot = PairBookTickersHolder.read();
+                    for (PairBookTicker value : snapshot.pairBookTickers.values()) {
+                        DbHelper.insertPairPrice(snapshot.timestamp, value.getPairName(), value.getBestAskPrice(), value.getBestBidPrice());
+                    }
                 }
             }
         });

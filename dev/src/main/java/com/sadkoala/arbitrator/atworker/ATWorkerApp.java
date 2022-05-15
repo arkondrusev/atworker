@@ -44,7 +44,6 @@ public class ATWorkerApp {
 
         // start save prices to db thread
         Thread savePricesThread = new Thread(() -> {
-            long timestamp;
             while (true) {
                 try {
                     Thread.sleep(10000);
@@ -153,6 +152,14 @@ public class ATWorkerApp {
                     .get();
         } catch (InterruptedException | ExecutionException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+        }
+
+        if (webSocket == null) {
+            log.error("Could not open websocket connection");
+            DbHelper.logMessage("Could not open websocket connection");
+        } else {
+            log.info("Websocket connection is open");
+            DbHelper.logMessage("Websocket connection is open");
         }
 
         return webSocket;

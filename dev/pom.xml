@@ -85,43 +85,8 @@
                                     <goal>run</goal>
                                 </goals>
                             </execution>
-                            <!--execution>
-                                <id>2</id>
-                                <phase>package</phase>
-                                <configuration>
-                                    <target>
-                                        <exec executable="cmd">
-                                            <arg value="/c"/>
-                                            <arg value="target\${project.name}\deploy_stand.bat"/>
-                                        </exec>
-                                    </target>
-                                </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                            </execution-->
                         </executions>
                     </plugin>
-                    <!--plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.0.0</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-jar</argument>
-                                <argument>target/${project.name}/${project.name}.jar</argument>
-                            </arguments>
-                        </configuration>
-                    </plugin-->
                 </plugins>
             </build>
         </profile>

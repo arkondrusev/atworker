@@ -6,25 +6,54 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteConfig;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 public class ATWorkerApp {
 
     private static final Logger log = LogManager.getLogger(ATWorkerApp.class);
 
+    private static final String APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH = "arbitrator_worker_db_file_path";
+    private static final String APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH = "arbitrator_monitor_db_file_path";
+
+    private static final String PARAMS_FILE_PATH = "atworker.properties";
+
     public static Connection monitorDbConnection = null;
     public static Connection workerDbConnection = null;
     public static WebSocket webSocket = null;
 
+    public static Map<String, Object> appParams = new HashMap<>();
+    static {
+        appParams.put(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH,"atworker.db");
+        appParams.put(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH,"atmonitor.db");
+    }
+
+    /*
+     * load param file, override default params
+     *  if no param file - proceed with default params
+     * connect monitor DB
+     *  if couldn't connect (no file or other problem) - exit application
+     * connect worker DB
+     *  if couldn't connect (no file or other problem) - exit application
+     *
+     *
+     */
+
     public static void main(String[] args) {
 
         log.info("At-worker started");
+
+        loadParamFile();
 
         connectMonitorDB();
         if (monitorDbConnection == null) {
@@ -80,6 +109,20 @@ public class ATWorkerApp {
 
     }
 
+    private static void loadParamFile() {
+        log.info("loading param file " + PARAMS_FILE_PATH);
+        Properties prop = new Properties();
+        try {
+            prop.load(new FileInputStream(PARAMS_FILE_PATH));
+            for (Map.Entry entry : prop.entrySet()) {
+                appParams.put((String) entry.getKey(), entry.getValue());
+            }
+            log.info("param file loaded");
+        } catch (Exception e) {
+            log.warn("Worker parameter file not loaded. " + e.getMessage());
+        }
+    }
+
     private static Connection connectDB(String dbPath, boolean readonly) {
         Connection connection = null;
         try {
@@ -98,7 +141,7 @@ public class ATWorkerApp {
 
     private static void connectMonitorDB() {
         // установление ro-подключения к monitor-db
-        String monitorDbPath = "persistent_files\\at-monitor.db";
+        String monitorDbPath = appParams.get(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH).toString();
         monitorDbConnection = connectDB(monitorDbPath, true);
         if (monitorDbConnection == null) {
             log.error("Could not connect to monitor DB at {" + monitorDbPath + "}" );
@@ -109,7 +152,7 @@ public class ATWorkerApp {
     }
 
     private static void connectWorkerDB() {
-        String workerDbPath = "persistent_files\\at-worker.db";
+        String workerDbPath = appParams.get(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH).toString();
         workerDbConnection = connectDB(workerDbPath, false);
         if (workerDbConnection == null) {
             log.error("Could not connect to worker DB at {" + workerDbPath + "}" );

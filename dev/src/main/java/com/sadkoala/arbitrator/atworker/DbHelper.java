@@ -18,12 +18,13 @@ public class DbHelper {
     private static final String SQL_INSERT_PAIR_PRICE = "insert into at_prices (timestamp, pair, best_ask, best_bid) values (?, ?, ?, ?)";
     private static PreparedStatement insertPairPricePrepared = null;
 
-    public static void initStatements() {
+    public static void initStatements() throws SQLException {
         try {
             insertLogMessagePrepared = ATWorkerApp.workerDbConnection.prepareStatement(SQL_INSERT_LOG_MESSAGE);
             insertPairPricePrepared = ATWorkerApp.workerDbConnection.prepareStatement(SQL_INSERT_PAIR_PRICE);
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            throw e;
         }
     }
 

@@ -39,6 +39,19 @@ public class ATWorkerApp {
     }
 
     /*
+     * on start:
+     *   check if file .atworker_active exists
+     *     yes - finish program
+     *     no - proceed execution
+     *   watch if file .atworker_stop exists
+     *     yes - finish program
+     *     no - continue watching
+     *
+     * finishing program:
+     *   finish all necessary tasks
+     *   delete file .atworker_stop if exists
+     *   delete file .atworker_active if exists
+     *
      * load param file, override default params
      *  if no param file - proceed with default params
      * connect monitor DB
@@ -49,7 +62,7 @@ public class ATWorkerApp {
      *
      */
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         log.info("At-worker started");
 
@@ -183,6 +196,8 @@ public class ATWorkerApp {
     }
 
     public static WebSocket startSocket() {
+
+        log.info("Opening new websocket");
 
         WebSocket.Listener wsListener = new SocketListener();
 

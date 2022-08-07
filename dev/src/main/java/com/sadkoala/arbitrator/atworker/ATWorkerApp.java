@@ -62,8 +62,16 @@ public class ATWorkerApp {
      *
      */
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        try {
+            mainRun();
+        } catch (Exception e) {
+            log.fatal(ExceptionUtils.getStackTrace(e));
+            log.fatal("Application terminated with error");
+        }
+    }
 
+    private static void mainRun () throws Exception {
         log.info("At-worker started");
 
         loadParamFile();

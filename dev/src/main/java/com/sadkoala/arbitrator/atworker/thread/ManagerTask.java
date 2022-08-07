@@ -34,6 +34,10 @@ public class ManagerTask implements Runnable {
             checkWebsocketIfTime();
             checkPairBookTickersUpdateIfTime();
 
+            if (ATWorkerApp.fileExists(ATWorkerApp.ATWORKER_STOP_FILE_PATH)) {
+                continue;
+            }
+
         }
     }
 

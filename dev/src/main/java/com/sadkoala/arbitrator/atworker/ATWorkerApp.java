@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteConfig;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -27,6 +28,8 @@ public class ATWorkerApp {
     private static final String APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH = "arbitrator_monitor_db_file_path";
 
     private static final String PARAMS_FILE_PATH = "atworker.properties";
+    private static final String ATWORKER_ACTIVE_FILE_PATH = ".atworker_active";
+    public static final String ATWORKER_STOP_FILE_PATH = ".atworker_stop";
 
     public static Connection monitorDbConnection = null;
     public static Connection workerDbConnection = null;
@@ -55,39 +58,36 @@ public class ATWorkerApp {
      * load param file, override default params
      *  if no param file - proceed with default params
      * connect monitor DB
-     *  if couldn't connect (no file or other problem) - exit application
+     *  if couldn't connect (no file or other problem) - finish program
      * connect worker DB
-     *  if couldn't connect (no file or other problem) - exit application
+     *  if couldn't connect (no file or other problem) - finish program
      *
      *
      */
 
     public static void main(String[] args) {
+        log.info("At-worker started");
+
         try {
+            startProgram();
             mainRun();
         } catch (Exception e) {
             log.fatal(ExceptionUtils.getStackTrace(e));
             log.fatal("Application terminated with error");
+        } finally {
+            try {
+                finishProgram();
+            } catch (Exception e) {
+                log.fatal(ExceptionUtils.getStackTrace(e));
+                log.fatal("Error during finalizing application");
+            }
         }
+
+        log.info("At-worker finished");
     }
 
     private static void mainRun () throws Exception {
-        log.info("At-worker started");
-
-        loadParamFile();
-
-        connectMonitorDB();
-        if (monitorDbConnection == null) {
-            return;
-        }
-
-        connectWorkerDB();
-        if (workerDbConnection == null) {
-            return;
-        }
-        DbHelper.initStatements();
-
-        DbHelper.logMessage("At-worker started");
+        log.info("main part started");
 
         Thread managerThread = new Thread(new ManagerTask());
         managerThread.start();
@@ -121,13 +121,52 @@ public class ATWorkerApp {
         DbHelper.logMessage("Websocket connection closed");
         log.info("Websocket connection closed");
 
-        DbHelper.logMessage("At-worker going to finish. Disconnecting from databases");
+        log.info("main part finished");
+    }
+
+    private static void startProgram() throws IOException, SQLException {
+        log.info("Init atworker begin");
+
+        if (fileExists(ATWORKER_ACTIVE_FILE_PATH)) {
+            throw new IllegalStateException("Atworker already started (" + ATWORKER_ACTIVE_FILE_PATH + " is present)");
+        }
+
+        File atworkerActiveFile = new File(ATWORKER_ACTIVE_FILE_PATH);
+        if (!atworkerActiveFile.createNewFile()) {
+            throw new IOException("Not able to create atworker lock file (" + ATWORKER_ACTIVE_FILE_PATH + ")");
+        }
+
+        loadParamFile();
+        connectMonitorDB();
+        connectWorkerDB();
+        DbHelper.initStatements();
+
+        log.info("Init atworker end");
+    }
+
+    private static void finishProgram() {
+        log.info("Finish atworker begin");
+
         disconnectWorkerDB();
         disconnectMonitorDB();
+        DbHelper.logMessage("Disconnected from databases");
         DbHelper.releaseStatements();
 
-        log.info("At-worker finished");
+        File atworkerActiveFile = new File(ATWORKER_ACTIVE_FILE_PATH);
+        if (atworkerActiveFile.exists() && !atworkerActiveFile.delete()) {
+            log.warn("Could not delete " + ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
+        }
+        File atworkerStopFile = new File(ATWORKER_STOP_FILE_PATH);
+        if (atworkerStopFile.exists() && !atworkerStopFile.delete()) {
+            log.warn("Could not delete " + ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
+        }
 
+        log.info("Finish atworker end");
+    }
+
+    public static boolean fileExists(String path) {
+        File f = new File(path);
+        return (f.exists() && !f.isDirectory());
     }
 
     private static void loadParamFile() {
@@ -144,7 +183,7 @@ public class ATWorkerApp {
         }
     }
 
-    private static Connection connectDB(String dbPath, boolean readonly) {
+    private static Connection connectDB(String dbPath, boolean readonly) throws SQLException {
         Connection connection = null;
         try {
             // db parameters
@@ -156,31 +195,23 @@ public class ATWorkerApp {
             connection.setAutoCommit(false);
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error during connection to db " + dbPath);
+            throw e;
         }
         return connection;
     }
 
-    private static void connectMonitorDB() {
+    private static void connectMonitorDB() throws SQLException {
         // установление ro-подключения к monitor-db
         String monitorDbPath = appParams.get(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH).toString();
         monitorDbConnection = connectDB(monitorDbPath, true);
-        if (monitorDbConnection == null) {
-            log.error("Could not connect to monitor DB at {" + monitorDbPath + "}" );
-            log.fatal("At-worker app failed");
-        } else {
-            log.info("Monitor DB connected {" + monitorDbPath + "}");
-        }
+        log.info("Monitor DB connected {" + monitorDbPath + "}");
     }
 
-    private static void connectWorkerDB() {
+    private static void connectWorkerDB() throws SQLException {
         String workerDbPath = appParams.get(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH).toString();
         workerDbConnection = connectDB(workerDbPath, false);
-        if (workerDbConnection == null) {
-            log.error("Could not connect to worker DB at {" + workerDbPath + "}" );
-            log.fatal("At-worker app failed");
-        } else {
-            log.info("Worker DB connected {" + workerDbPath + "}");
-        }
+        log.info("Worker DB connected {" + workerDbPath + "}");
     }
 
     private static void disconnectWorkerDB() {

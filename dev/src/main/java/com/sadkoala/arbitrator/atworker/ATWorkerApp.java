@@ -37,8 +37,8 @@ public class ATWorkerApp {
 
     public static Map<String, Object> appParams = new HashMap<>();
     static {
-        appParams.put(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH,"atworker.db");
-        appParams.put(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH,"atmonitor.db");
+        appParams.put(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH, "atworker.db");
+        appParams.put(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH, "atmonitor.db");
     }
 
     /*
@@ -149,7 +149,6 @@ public class ATWorkerApp {
 
         disconnectWorkerDB();
         disconnectMonitorDB();
-        DbHelper.logMessage("Disconnected from databases");
         DbHelper.releaseStatements();
 
         File atworkerActiveFile = new File(ATWORKER_ACTIVE_FILE_PATH);
@@ -217,21 +216,25 @@ public class ATWorkerApp {
     private static void disconnectWorkerDB() {
         // закрыть соединение с бд воркер
         try {
-            workerDbConnection.close();
+            if (workerDbConnection != null) {
+                workerDbConnection.close();
+                log.info("Worker DB disconnected");
+            }
         } catch (SQLException e) {
             log.error(e);
         }
-        log.info("Worker DB disconnected");
     }
 
     private static void disconnectMonitorDB() {
         // закрыть соединение с бд монитор
         try {
-            monitorDbConnection.close();
+            if (monitorDbConnection != null) {
+                monitorDbConnection.close();
+                log.info("Monitor DB disconnected");
+            }
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }
-        log.info("Monitor DB disconnected");
     }
 
     public static WebSocket startSocket() {

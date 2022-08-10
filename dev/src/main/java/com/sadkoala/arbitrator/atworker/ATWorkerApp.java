@@ -71,12 +71,13 @@ public class ATWorkerApp {
         try {
             startProgram();
             mainRun();
+            finishProgram();
         } catch (Exception e) {
             log.fatal(ExceptionUtils.getStackTrace(e));
             log.fatal("Application terminated with error");
         } finally {
             try {
-                finishProgram();
+                finalizeProgram();
             } catch (Exception e) {
                 log.fatal(ExceptionUtils.getStackTrace(e));
                 log.fatal("Error during finalizing application");
@@ -84,6 +85,16 @@ public class ATWorkerApp {
         }
 
         log.info("At-worker finished");
+    }
+
+    private static void finalizeProgram() {
+        log.info("Finalize atworker begin");
+
+        disconnectWorkerDB();
+        disconnectMonitorDB();
+        DbHelper.releaseStatements();
+
+        log.info("Finalize atworker end");
     }
 
     private static void mainRun () throws Exception {
@@ -146,10 +157,6 @@ public class ATWorkerApp {
 
     private static void finishProgram() {
         log.info("Finish atworker begin");
-
-        disconnectWorkerDB();
-        disconnectMonitorDB();
-        DbHelper.releaseStatements();
 
         File atworkerActiveFile = new File(ATWORKER_ACTIVE_FILE_PATH);
         if (atworkerActiveFile.exists() && !atworkerActiveFile.delete()) {

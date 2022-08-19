@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class Global {
 
@@ -70,19 +69,19 @@ public class Global {
 
     public static Optional<Token> findTokenByName(String name) {
         return tokenList.stream()
-                .filter(t -> t.getName().equals(name))
+                .filter(t -> t.getName().equals(name.toUpperCase()))
                 .findFirst();
     }
 
     public static Optional<Pair> findPairByTokens(Token firstToken, Token secondToken, boolean firstOnlyUpper) {
         Optional<Pair> pairSearch = pairList.stream()
-                .filter(pair -> pair.getUpperToken().getName().equals(firstToken)
-                        && pair.getBottomToken().getName().equals(secondToken))
+                .filter(pair -> pair.getUpperToken().equals(firstToken)
+                        && pair.getBottomToken().equals(secondToken))
                 .findFirst();
         if (pairSearch.isEmpty() && !firstOnlyUpper) {
             pairSearch = pairList.stream()
-                    .filter(pair -> pair.getBottomToken().getName().equals(firstToken)
-                            && pair.getUpperToken().getName().equals(secondToken))
+                    .filter(pair -> pair.getBottomToken().equals(firstToken)
+                            && pair.getUpperToken().equals(secondToken))
                     .findFirst();
         }
         return pairSearch;
@@ -90,6 +89,14 @@ public class Global {
 
     public static Optional<Pair> findPairByTokens(Token firstToken, Token secondToken) {
         return findPairByTokens(firstToken, secondToken, false);
+    }
+
+    public static Optional<Pair> findPairByTokenNames(String firstToken, String secondToken, boolean firstOnlyUpper) {
+        return findPairByTokens(findTokenByName(firstToken).get(), findTokenByName(secondToken).get(), firstOnlyUpper);
+    }
+
+    public static Optional<Pair> findPairByTokenNames(String firstToken, String secondToken) {
+        return findPairByTokenNames(firstToken, secondToken, false);
     }
 
 }

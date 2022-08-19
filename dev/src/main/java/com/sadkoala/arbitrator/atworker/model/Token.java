@@ -8,6 +8,7 @@ public class Token {
     private String name;
 
     public Token(BigInteger id, String name) {
+        this.id = id;
         this.name = name;
     }
 

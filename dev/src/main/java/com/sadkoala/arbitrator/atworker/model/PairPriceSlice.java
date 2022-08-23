@@ -1,7 +1,6 @@
 package com.sadkoala.arbitrator.atworker.model;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public class PairPriceSlice {
 
@@ -9,9 +8,9 @@ public class PairPriceSlice {
     private Pair pair;
     private String pairNameDb;
     private BigDecimal bestAskPrice;
-    private BigInteger bestBidPrice;
+    private BigDecimal bestBidPrice;
 
-    public PairPriceSlice(Long timestamp, String pairNameDb, BigDecimal bestAskPrice, BigInteger bestBidPrice) {
+    public PairPriceSlice(Long timestamp, String pairNameDb, BigDecimal bestAskPrice, BigDecimal bestBidPrice) {
         this.timestamp = timestamp;
         this.pairNameDb = pairNameDb;
         this.bestAskPrice = bestAskPrice;
@@ -34,7 +33,7 @@ public class PairPriceSlice {
         return bestAskPrice;
     }
 
-    public BigInteger getBestBidPrice() {
+    public BigDecimal getBestBidPrice() {
         return bestBidPrice;
     }
 

@@ -6,32 +6,28 @@ import java.util.List;
 
 public class RoutePriceSliceProfit {
 
-    private Long timestamp;
     private List<PairPriceSlice> priceSliceList;
-    private boolean direction;  // 0 - direct, 1 - reverse
+    private boolean directWay;
     private StockExchange stockExchange;
-    private BigDecimal tradeFee;
     private BigDecimal profitPct;
 
-    public RoutePriceSliceProfit(Long timestamp, List<PairPriceSlice> priceSliceList, boolean direction, StockExchange stockExchange, BigDecimal tradeFee, BigDecimal profitPct) {
-        this.timestamp = timestamp;
+    public RoutePriceSliceProfit(List<PairPriceSlice> priceSliceList, boolean directWay, StockExchange stockExchange, BigDecimal profitPct) {
         this.priceSliceList = Collections.unmodifiableList(priceSliceList);
-        this.direction = direction;
+        this.directWay = directWay;
         this.stockExchange = stockExchange;
-        this.tradeFee = tradeFee;
         this.profitPct = profitPct;
     }
 
     public Long getTimestamp() {
-        return timestamp;
+        return priceSliceList.get(0).getTimestamp();
     }
 
     public List<PairPriceSlice> getPriceSliceList() {
         return priceSliceList;
     }
 
-    public boolean isDirection() {
-        return direction;
+    public boolean isDirectWay() {
+        return directWay;
     }
 
     public StockExchange getStockExchange() {
@@ -39,7 +35,7 @@ public class RoutePriceSliceProfit {
     }
 
     public BigDecimal getTradeFee() {
-        return tradeFee;
+        return stockExchange.getTradeFee();
     }
 
     public BigDecimal getProfitPct() {

@@ -7,22 +7,26 @@ import java.util.List;
 
 public class RouteProfitCalculator {
 
-    public static RoutePriceSliceProfit calcRouteProfit(BigDecimal tradeFee, Route route, List<PairPriceSlice> priceSlices) {
-        Token firstToken = route.getTokenList().get(0);
-        Token secondToken = route.getTokenList().get(1);
-        Token thirdToken = route.getTokenList().get(2);
+    public static RoutePriceSliceProfit calcRouteProfit(StockExchange stockExchange, Route route, List<PairPriceSlice> priceSliceList) {
+        Token sourceToken;
+        Token destToken;
+        BigDecimal tradeFeeMultiplier = BigDecimal.ONE.subtract(stockExchange.getTradeFee());
+        BigDecimal moneyStart = BigDecimal.ONE;
+        BigDecimal money = moneyStart;
+        RoutePriceSliceProfit routeProfit = null;
 
-        PairPriceSlice priceSlice = priceSlices.get(0);
-        Pair secondPair = priceSlices.get(1).getPair();
-        Pair thirdPair = priceSlices.get(2).getPair();
+        List<Token> routeTokenList = route.getTokenList();
+        for (int i = 0; i < routeTokenList.size(); i++) {
+            sourceToken = routeTokenList.get(i);
+            destToken = (i == routeTokenList.size()-1) ? routeTokenList.get(0) : routeTokenList.get(i+1);
+            money = doTrade(sourceToken, destToken, money, tradeFeeMultiplier, priceSliceList.get(i));
+        }
 
-        BigDecimal money = new BigDecimal("1");
-
-        return null;
-    }
-
-    private static BigDecimal getTradePrice(PairPriceSlice priceSlice, boolean buyTrade) {
-        return buyTrade ? priceSlice.getBestBidPrice() : priceSlice.getBestAskPrice();
+        if (moneyStart.compareTo(money) < 0) {
+            BigDecimal profitPct = money.subtract(moneyStart).divide(moneyStart);
+            routeProfit = new RoutePriceSliceProfit(priceSliceList, true, stockExchange, profitPct);
+        }
+        return routeProfit;
     }
 
     private static boolean isBuyTrade(Token sourceToken, Token destToken, Pair pair) {
@@ -38,10 +42,16 @@ public class RouteProfitCalculator {
     }
 
     private static BigDecimal doTrade(Token sourceToken, Token destToken, BigDecimal sourceValue, BigDecimal tradeFeeMultiplier, PairPriceSlice priceSlice) {
-        BigDecimal intermediateValue = sourceValue.divide(priceSlice.getBestBidPrice());
-        BigDecimal destValue = intermediateValue.multiply(tradeFeeMultiplier);
+        boolean buyTrade = isBuyTrade(sourceToken, destToken, priceSlice.getPair());
 
-        return destValue;
+        BigDecimal intermediateValue;
+        if (buyTrade) {
+            intermediateValue = sourceValue.divide(priceSlice.getBestBidPrice());
+        } else {
+            intermediateValue = sourceValue.multiply(priceSlice.getBestAskPrice());
+        }
+
+        return intermediateValue.multiply(tradeFeeMultiplier);
     }
 
 }

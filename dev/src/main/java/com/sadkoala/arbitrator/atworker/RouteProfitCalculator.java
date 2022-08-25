@@ -46,9 +46,9 @@ public class RouteProfitCalculator {
 
         BigDecimal intermediateValue;
         if (buyTrade) {
-            intermediateValue = sourceValue.divide(priceSlice.getBestBidPrice());
+            intermediateValue = sourceValue.divide(priceSlice.getBestAskPrice());
         } else {
-            intermediateValue = sourceValue.multiply(priceSlice.getBestAskPrice());
+            intermediateValue = sourceValue.multiply(priceSlice.getBestBidPrice());
         }
 
         return intermediateValue.multiply(tradeFeeMultiplier);

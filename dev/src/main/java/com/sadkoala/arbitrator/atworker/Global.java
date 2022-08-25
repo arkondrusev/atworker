@@ -99,4 +99,14 @@ public class Global {
         return findPairByTokenNames(firstToken, secondToken, false);
     }
 
+    public static Optional<Route> findRouteByTokenNames(String firstToken, String secondToken, String thirdToken) {
+        List<Token> tokens = new ArrayList<>();
+        tokens.add(findTokenByName(firstToken).get());
+        tokens.add(findTokenByName(secondToken).get());
+        tokens.add(findTokenByName(thirdToken).get());
+        return routeList.stream()
+                .filter(r -> r.getTokenList().containsAll(tokens))
+                .findFirst();
+    }
+
 }

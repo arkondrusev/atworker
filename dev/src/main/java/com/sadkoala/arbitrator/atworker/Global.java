@@ -7,13 +7,17 @@ import com.sadkoala.arbitrator.atworker.model.Token;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class Global {
 
-    public static StockExchange stockExchange = new StockExchange(BigInteger.ONE, "Binance", new BigDecimal("0.075"));
+    public static MathContext mathContext = new MathContext(6, RoundingMode.FLOOR);
+
+    public static StockExchange stockExchange = new StockExchange(BigInteger.ONE, "Binance", new BigDecimal("0.00075"));
     public static List<Token> tokenList = new ArrayList<>();
     public static List<Pair> pairList = new ArrayList<>();
     public static List<Route> routeList = new ArrayList<>();

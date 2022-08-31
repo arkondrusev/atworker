@@ -2,7 +2,6 @@ package com.sadkoala.arbitrator.atworker;
 
 import com.sadkoala.arbitrator.atworker.model.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public class RouteProfitCalculator {
@@ -10,10 +9,10 @@ public class RouteProfitCalculator {
     public static RoutePriceSliceProfit calcRouteProfit(StockExchange stockExchange, Route route, List<PairPriceSlice> priceSliceList) {
         Token sourceToken;
         Token destToken;
-        BigDecimal tradeFeeMultiplier = BigDecimal.ONE.subtract(stockExchange.getTradeFee());
-        BigDecimal moneyStart = BigDecimal.ONE;
-        BigDecimal money = moneyStart;
-        RoutePriceSliceProfit routeProfit = null;
+        BigDecimal2 tradeFeeMultiplier = BigDecimal2.ONE.subtract(stockExchange.getTradeFee());
+        BigDecimal2 moneyStart = BigDecimal2.ONE;
+        BigDecimal2 money = moneyStart;
+        RoutePriceSliceProfit routeProfit;
 
         List<Token> routeTokenList = route.getTokenList();
         for (int i = 0; i < routeTokenList.size(); i++) {
@@ -22,8 +21,9 @@ public class RouteProfitCalculator {
             money = doTrade(sourceToken, destToken, money, tradeFeeMultiplier, priceSliceList.get(i));
         }
 
+        routeProfit = null;
         if (moneyStart.compareTo(money) < 0) {
-            BigDecimal profitPct = money.subtract(moneyStart).divide(moneyStart);
+            BigDecimal2 profitPct = money.subtract(moneyStart).divide(moneyStart);
             routeProfit = new RoutePriceSliceProfit(priceSliceList, true, stockExchange, profitPct);
         }
         return routeProfit;
@@ -41,10 +41,10 @@ public class RouteProfitCalculator {
         }
     }
 
-    private static BigDecimal doTrade(Token sourceToken, Token destToken, BigDecimal sourceValue, BigDecimal tradeFeeMultiplier, PairPriceSlice priceSlice) {
+    protected static BigDecimal2 doTrade(Token sourceToken, Token destToken, BigDecimal2 sourceValue, BigDecimal2 tradeFeeMultiplier, PairPriceSlice priceSlice) {
         boolean buyTrade = isBuyTrade(sourceToken, destToken, priceSlice.getPair());
 
-        BigDecimal intermediateValue;
+        BigDecimal2 intermediateValue;
         if (buyTrade) {
             intermediateValue = sourceValue.divide(priceSlice.getBestAskPrice());
         } else {

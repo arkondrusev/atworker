@@ -44,10 +44,15 @@ public class Global {
         addPair(ltc, eth);
 
         addRoute(usdt, eth, btc);
+        addRoute(usdt, btc, eth);
         addRoute(usdt, ada, btc);
+        addRoute(usdt, btc, ada);
         addRoute(usdt, ltc, btc);
+        addRoute(usdt, btc, ltc);
         addRoute(btc, ada, eth);
+        addRoute(btc, eth, ada);
         addRoute(btc, ltc, eth);
+        addRoute(btc, eth, ltc);
     }
 
     public static synchronized Token addToken(String name) {
@@ -104,13 +109,17 @@ public class Global {
     }
 
     public static Optional<Route> findRouteByTokenNames(String firstToken, String secondToken, String thirdToken) {
-        List<Token> tokens = new ArrayList<>();
-        tokens.add(findTokenByName(firstToken).get());
-        tokens.add(findTokenByName(secondToken).get());
-        tokens.add(findTokenByName(thirdToken).get());
-        return routeList.stream()
-                .filter(r -> r.getTokenList().containsAll(tokens))
-                .findFirst();
+        try {
+            List<Token> tokens = new ArrayList<>();
+            tokens.add(findTokenByName(firstToken).get());
+            tokens.add(findTokenByName(secondToken).get());
+            tokens.add(findTokenByName(thirdToken).get());
+            return routeList.stream()
+                    .filter(r -> r.getTokenList().containsAll(tokens))
+                    .findFirst();
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
 }

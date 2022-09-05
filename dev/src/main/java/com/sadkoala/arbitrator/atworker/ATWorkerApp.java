@@ -24,21 +24,10 @@ public class ATWorkerApp {
 
     private static final Logger log = LogManager.getLogger(ATWorkerApp.class);
 
-    private static final String APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH = "arbitrator_worker_db_file_path";
-    private static final String APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH = "arbitrator_monitor_db_file_path";
-
-    private static final String PARAMS_FILE_PATH = "atworker.properties";
-    private static final String ATWORKER_ACTIVE_FILE_PATH = ".atworker_active";
-    public static final String ATWORKER_STOP_FILE_PATH = ".atworker_stop";
-
-    public static Connection monitorDbConnection = null;
-    public static Connection workerDbConnection = null;
-    public static WebSocket webSocket = null;
-
     public static Map<String, Object> appParams = new HashMap<>();
     static {
-        appParams.put(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH, "atworker.db");
-        appParams.put(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH, "atmonitor.db");
+        appParams.put(GlobalResources.APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH, "atworker.db");
+        appParams.put(GlobalResources.APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH, "atmonitor.db");
     }
 
     /*
@@ -128,7 +117,7 @@ public class ATWorkerApp {
             log.error(ExceptionUtils.getStackTrace(e));
         }
 
-        webSocket.abort();
+        GlobalResources.webSocket.abort();
         DbHelper.logMessage("Websocket connection closed");
         log.info("Websocket connection closed");
 
@@ -138,13 +127,13 @@ public class ATWorkerApp {
     private static void startProgram() throws IOException, SQLException {
         log.info("Init atworker begin");
 
-        if (fileExists(ATWORKER_ACTIVE_FILE_PATH)) {
-            throw new IllegalStateException("Atworker already started (" + ATWORKER_ACTIVE_FILE_PATH + " is present)");
+        if (fileExists(GlobalResources.ATWORKER_ACTIVE_FILE_PATH)) {
+            throw new IllegalStateException("Atworker already started (" + GlobalResources.ATWORKER_ACTIVE_FILE_PATH + " is present)");
         }
 
-        File atworkerActiveFile = new File(ATWORKER_ACTIVE_FILE_PATH);
+        File atworkerActiveFile = new File(GlobalResources.ATWORKER_ACTIVE_FILE_PATH);
         if (!atworkerActiveFile.createNewFile()) {
-            throw new IOException("Not able to create atworker lock file (" + ATWORKER_ACTIVE_FILE_PATH + ")");
+            throw new IOException("Not able to create atworker lock file (" + GlobalResources.ATWORKER_ACTIVE_FILE_PATH + ")");
         }
 
         loadParamFile();
@@ -158,13 +147,13 @@ public class ATWorkerApp {
     private static void finishProgram() {
         log.info("Finish atworker begin");
 
-        File atworkerActiveFile = new File(ATWORKER_ACTIVE_FILE_PATH);
+        File atworkerActiveFile = new File(GlobalResources.ATWORKER_ACTIVE_FILE_PATH);
         if (atworkerActiveFile.exists() && !atworkerActiveFile.delete()) {
-            log.warn("Could not delete " + ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
+            log.warn("Could not delete " + GlobalResources.ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
         }
-        File atworkerStopFile = new File(ATWORKER_STOP_FILE_PATH);
+        File atworkerStopFile = new File(GlobalResources.ATWORKER_STOP_FILE_PATH);
         if (atworkerStopFile.exists() && !atworkerStopFile.delete()) {
-            log.warn("Could not delete " + ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
+            log.warn("Could not delete " + GlobalResources.ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
         }
 
         log.info("Finish atworker end");
@@ -176,10 +165,10 @@ public class ATWorkerApp {
     }
 
     private static void loadParamFile() {
-        log.info("loading param file " + PARAMS_FILE_PATH);
+        log.info("loading param file " + GlobalResources.PARAMS_FILE_PATH);
         Properties prop = new Properties();
         try {
-            prop.load(new FileInputStream(PARAMS_FILE_PATH));
+            prop.load(new FileInputStream(GlobalResources.PARAMS_FILE_PATH));
             for (Map.Entry entry : prop.entrySet()) {
                 appParams.put((String) entry.getKey(), entry.getValue());
             }
@@ -190,7 +179,7 @@ public class ATWorkerApp {
     }
 
     private static Connection connectDB(String dbPath, boolean readonly) throws SQLException {
-        Connection connection = null;
+        Connection connection;
         try {
             // db parameters
             String url = "jdbc:sqlite:" + dbPath;
@@ -209,22 +198,22 @@ public class ATWorkerApp {
 
     private static void connectMonitorDB() throws SQLException {
         // установление ro-подключения к monitor-db
-        String monitorDbPath = appParams.get(APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH).toString();
-        monitorDbConnection = connectDB(monitorDbPath, true);
+        String monitorDbPath = appParams.get(GlobalResources.APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH).toString();
+        GlobalResources.monitorDbConnection = connectDB(monitorDbPath, true);
         log.info("Monitor DB connected {" + monitorDbPath + "}");
     }
 
     private static void connectWorkerDB() throws SQLException {
-        String workerDbPath = appParams.get(APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH).toString();
-        workerDbConnection = connectDB(workerDbPath, false);
+        String workerDbPath = appParams.get(GlobalResources.APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH).toString();
+        GlobalResources.workerDbConnection = connectDB(workerDbPath, false);
         log.info("Worker DB connected {" + workerDbPath + "}");
     }
 
     private static void disconnectWorkerDB() {
         // закрыть соединение с бд воркер
         try {
-            if (workerDbConnection != null) {
-                workerDbConnection.close();
+            if (GlobalResources.workerDbConnection != null) {
+                GlobalResources.workerDbConnection.close();
                 log.info("Worker DB disconnected");
             }
         } catch (SQLException e) {
@@ -235,8 +224,8 @@ public class ATWorkerApp {
     private static void disconnectMonitorDB() {
         // закрыть соединение с бд монитор
         try {
-            if (monitorDbConnection != null) {
-                monitorDbConnection.close();
+            if (GlobalResources.monitorDbConnection != null) {
+                GlobalResources.monitorDbConnection.close();
                 log.info("Monitor DB disconnected");
             }
         } catch (SQLException e) {

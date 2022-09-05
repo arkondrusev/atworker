@@ -2,12 +2,13 @@ package com.sadkoala.arbitrator.atworker.thread;
 
 import com.sadkoala.arbitrator.atworker.ATWorkerApp;
 import com.sadkoala.arbitrator.atworker.DbHelper;
+import com.sadkoala.arbitrator.atworker.GlobalResources;
 import com.sadkoala.arbitrator.atworker.PairBookTickersHolder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static com.sadkoala.arbitrator.atworker.ATWorkerApp.webSocket;
+import static com.sadkoala.arbitrator.atworker.GlobalResources.webSocket;
 
 public class ManagerTask implements Runnable {
 
@@ -25,19 +26,18 @@ public class ManagerTask implements Runnable {
         while (true) {
             try {
                 Thread.sleep(5000);
+
+                checkWebsocketIfTime();
+                checkPairBookTickersUpdateIfTime();
+
+                if (ATWorkerApp.fileExists(GlobalResources.ATWORKER_STOP_FILE_PATH)) {
+                    break;
+                }
             } catch (InterruptedException e) {
                 String stack = ExceptionUtils.getStackTrace(e);
                 log.error(stack);
                 DbHelper.logMessage(stack);
             }
-
-            checkWebsocketIfTime();
-            checkPairBookTickersUpdateIfTime();
-
-            if (ATWorkerApp.fileExists(ATWorkerApp.ATWORKER_STOP_FILE_PATH)) {
-                break;
-            }
-
         }
     }
 
@@ -59,9 +59,7 @@ public class ManagerTask implements Runnable {
 
             // установление подключения к binance
             webSocket = ATWorkerApp.startSocket();
-            nextWebsocketCheck = System.currentTimeMillis() + WEBSOCKET_INTERVAL;
             nextTickersCheck = System.currentTimeMillis() + TICKERS_INTERVAL;
-            return;
         }
         nextWebsocketCheck = System.currentTimeMillis() + WEBSOCKET_INTERVAL;
     }
@@ -70,6 +68,7 @@ public class ManagerTask implements Runnable {
         if (System.currentTimeMillis() >= nextTickersCheck) {
             checkPairBookTickersUpdate();
         }
+        nextTickersCheck = System.currentTimeMillis() + TICKERS_INTERVAL;
     }
 
     private void checkPairBookTickersUpdate() {
@@ -86,7 +85,6 @@ public class ManagerTask implements Runnable {
             log.info(msg);
             webSocket = ATWorkerApp.startSocket();
             nextWebsocketCheck = System.currentTimeMillis() + WEBSOCKET_INTERVAL;
-            return;
         }
     }
 

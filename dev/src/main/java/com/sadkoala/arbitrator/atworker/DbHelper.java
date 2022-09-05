@@ -20,8 +20,8 @@ public class DbHelper {
 
     public static void initStatements() throws SQLException {
         try {
-            insertLogMessagePrepared = ATWorkerApp.workerDbConnection.prepareStatement(SQL_INSERT_LOG_MESSAGE);
-            insertPairPricePrepared = ATWorkerApp.workerDbConnection.prepareStatement(SQL_INSERT_PAIR_PRICE);
+            insertLogMessagePrepared = GlobalResources.workerDbConnection.prepareStatement(SQL_INSERT_LOG_MESSAGE);
+            insertPairPricePrepared = GlobalResources.workerDbConnection.prepareStatement(SQL_INSERT_PAIR_PRICE);
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw e;
@@ -49,7 +49,7 @@ public class DbHelper {
             insertLogMessagePrepared.setString(2, tags);
             insertLogMessagePrepared.setString(3, msg);
             insertLogMessagePrepared.executeUpdate();
-            ATWorkerApp.workerDbConnection.commit();
+            GlobalResources.workerDbConnection.commit();
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }
@@ -74,7 +74,7 @@ public class DbHelper {
             insertPairPricePrepared.setBigDecimal(3, bestAsk);
             insertPairPricePrepared.setBigDecimal(4, bestBid);
             insertPairPricePrepared.executeUpdate();
-            ATWorkerApp.workerDbConnection.commit();
+            GlobalResources.workerDbConnection.commit();
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }

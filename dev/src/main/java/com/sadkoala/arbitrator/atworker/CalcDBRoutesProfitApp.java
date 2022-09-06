@@ -1,8 +1,15 @@
 package com.sadkoala.arbitrator.atworker;
 
-public class CalcDBRoutesProfit {
+import java.sql.SQLException;
 
-    public static void main(String[] args) {
+public class CalcDBRoutesProfitApp {
+
+    public static void main(String[] args) throws SQLException {
+
+        GlobalResources.openWorkerDbConnection("atworker.db", false);
+
+        
+
         /*
         * we need app property - last processed by calc routes timestamp
         * we need table - with profits found
@@ -21,6 +28,8 @@ public class CalcDBRoutesProfit {
         * update "last processed timestamp" property
         *
         * */
+
+
     }
 
 }

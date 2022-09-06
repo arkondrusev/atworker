@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -20,8 +21,9 @@ public class DbHelper {
 
     public static void initStatements() throws SQLException {
         try {
-            insertLogMessagePrepared = GlobalResources.workerDbConnection.prepareStatement(SQL_INSERT_LOG_MESSAGE);
-            insertPairPricePrepared = GlobalResources.workerDbConnection.prepareStatement(SQL_INSERT_PAIR_PRICE);
+            Connection workerDbConnection = GlobalResources.getWorkerDbConnection().get();
+            insertLogMessagePrepared = workerDbConnection.prepareStatement(SQL_INSERT_LOG_MESSAGE);
+            insertPairPricePrepared = workerDbConnection.prepareStatement(SQL_INSERT_PAIR_PRICE);
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
             throw e;
@@ -49,7 +51,7 @@ public class DbHelper {
             insertLogMessagePrepared.setString(2, tags);
             insertLogMessagePrepared.setString(3, msg);
             insertLogMessagePrepared.executeUpdate();
-            GlobalResources.workerDbConnection.commit();
+            GlobalResources.getWorkerDbConnection().get().commit();
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }
@@ -74,7 +76,7 @@ public class DbHelper {
             insertPairPricePrepared.setBigDecimal(3, bestAsk);
             insertPairPricePrepared.setBigDecimal(4, bestBid);
             insertPairPricePrepared.executeUpdate();
-            GlobalResources.workerDbConnection.commit();
+            GlobalResources.getWorkerDbConnection().get().commit();
         } catch (SQLException e) {
             log.error(ExceptionUtils.getStackTrace(e));
         }

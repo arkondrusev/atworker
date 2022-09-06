@@ -4,7 +4,6 @@ import com.sadkoala.arbitrator.atworker.thread.ManagerTask;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.sqlite.SQLiteConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,8 +11,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,14 +76,14 @@ public class ATWorkerApp {
     private static void finalizeProgram() {
         log.info("Finalize atworker begin");
 
-        disconnectWorkerDB();
-        disconnectMonitorDB();
+        GlobalResources.closeWorkerDbConnection();
+        GlobalResources.closeMonitorDbConnection();
         DbHelper.releaseStatements();
 
         log.info("Finalize atworker end");
     }
 
-    private static void mainRun () throws Exception {
+    private static void mainRun () {
         log.info("main part started");
 
         Thread managerThread = new Thread(new ManagerTask());
@@ -169,7 +166,7 @@ public class ATWorkerApp {
         Properties prop = new Properties();
         try {
             prop.load(new FileInputStream(GlobalResources.PARAMS_FILE_PATH));
-            for (Map.Entry entry : prop.entrySet()) {
+            for (Map.Entry<Object,Object> entry : prop.entrySet()) {
                 appParams.put((String) entry.getKey(), entry.getValue());
             }
             log.info("param file loaded");
@@ -178,59 +175,15 @@ public class ATWorkerApp {
         }
     }
 
-    private static Connection connectDB(String dbPath, boolean readonly) throws SQLException {
-        Connection connection;
-        try {
-            // db parameters
-            String url = "jdbc:sqlite:" + dbPath;
-            // create a connection to the database
-            SQLiteConfig config = new SQLiteConfig();
-            config.setReadOnly(readonly);
-            connection = DriverManager.getConnection(url, config.toProperties());
-            connection.setAutoCommit(false);
-        } catch (SQLException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-            log.error("Error during connection to db " + dbPath);
-            throw e;
-        }
-        return connection;
-    }
-
     private static void connectMonitorDB() throws SQLException {
         // установление ro-подключения к monitor-db
         String monitorDbPath = appParams.get(GlobalResources.APPLICATION_PROPERTY_NAME__MONITOR_DB_FILE_PATH).toString();
-        GlobalResources.monitorDbConnection = connectDB(monitorDbPath, true);
-        log.info("Monitor DB connected {" + monitorDbPath + "}");
+        GlobalResources.openMonitorDbConnection(monitorDbPath, true);
     }
 
     private static void connectWorkerDB() throws SQLException {
         String workerDbPath = appParams.get(GlobalResources.APPLICATION_PROPERTY_NAME__WORKER_DB_FILE_PATH).toString();
-        GlobalResources.workerDbConnection = connectDB(workerDbPath, false);
-        log.info("Worker DB connected {" + workerDbPath + "}");
-    }
-
-    private static void disconnectWorkerDB() {
-        // закрыть соединение с бд воркер
-        try {
-            if (GlobalResources.workerDbConnection != null) {
-                GlobalResources.workerDbConnection.close();
-                log.info("Worker DB disconnected");
-            }
-        } catch (SQLException e) {
-            log.error(e);
-        }
-    }
-
-    private static void disconnectMonitorDB() {
-        // закрыть соединение с бд монитор
-        try {
-            if (GlobalResources.monitorDbConnection != null) {
-                GlobalResources.monitorDbConnection.close();
-                log.info("Monitor DB disconnected");
-            }
-        } catch (SQLException e) {
-            log.error(ExceptionUtils.getStackTrace(e));
-        }
+        GlobalResources.openWorkerDbConnection(workerDbPath, false);
     }
 
     public static WebSocket startSocket() {

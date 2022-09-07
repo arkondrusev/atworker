@@ -36,8 +36,10 @@ public class CalcDBRoutesProfitApp {
         tableCheckRs.close();
 
         // read property "last processed timestamp
-        Statement readLastProcessed = conn.createStatement();
-
+        Statement readLastProcessedStmt = conn.createStatement();
+        ResultSet readLastProcessedRs = readLastProcessedStmt.executeQuery("select value from worker_state where key = 'last_processed_price_timestamp'");
+        long lastProcessedTimestamp = readLastProcessedRs.next() ? Long.valueOf(readLastProcessedRs.getString(1)) : 0l;
+        readLastProcessedRs.close();
 
         /*
         * we need app property - last processed by calc routes timestamp

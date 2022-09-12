@@ -26,7 +26,13 @@ public class Global {
     private static BigInteger pairIdSeq = BigInteger.ZERO;
     private static BigInteger routeIdSeq = BigInteger.ZERO;
 
+    public static List<String> baseTokensStrList = new ArrayList<>();
+
     static {
+        baseTokensStrList.add("USDT");
+        baseTokensStrList.add("BTC");
+        baseTokensStrList.add("ETH");
+
         Token usdt = addToken("USDT");
         Token btc = addToken("BTC");
         Token eth = addToken("ETH");

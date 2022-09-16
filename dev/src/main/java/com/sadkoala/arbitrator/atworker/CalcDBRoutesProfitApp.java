@@ -26,110 +26,34 @@ public class CalcDBRoutesProfitApp {
         checkRouteProfitTableExists();
         Long lastProcessedTimestamp = readLastProcessedTimestamp();
 
-        long timestampUntil = lastProcessedTimestamp + 3600000;
+        int hours = 3;
+        Long recCount = 0l;
 
-        List<PairPriceSlice> priceList = readPairPrices(lastProcessedTimestamp, timestampUntil);
+        while (true) {
+            Long timestampUntil = lastProcessedTimestamp + hours*3600000;
+            List<PairPriceSlice> priceList = readPairPrices(lastProcessedTimestamp, timestampUntil);
 
-        if (priceList.isEmpty()) {
-            log.info("finding next min timestamp");
-            Statement minTsStmt = conn.createStatement();
-            ResultSet minTsRs = minTsStmt.executeQuery("select min(timestamp) from at_prices where timestamp > ?");
-            minTsRs.next();
-            lastProcessedTimestamp = minTsRs.getLong(1)-1; // minus 1 because query has > condition, not >=
-            log.info("next min timestamp found = " + lastProcessedTimestamp);
-        }
-
-        while (priceList == null /*|| !priceList.isEmpty()*/) {
-            // if last processed timestamp not set - find minimal timestamp to start with
-            if (0 == lastProcessedTimestamp) {
-                log.info("finding min timestamp");
-                Statement minTsStmt = conn.createStatement();
-                ResultSet minTsRs = minTsStmt.executeQuery("select min(timestamp) from at_prices");
-                minTsRs.next();
-                lastProcessedTimestamp = minTsRs.getLong(1)-1; // minus 1 because query has > condition, not >=
-                log.info("min timestamp found = " + lastProcessedTimestamp);
-            }
-
-                // query bunch of price records
-            long timestampUntil = lastProcessedTimestamp + 3600000;
-            PreparedStatement pricesBatchStmt = conn.prepareStatement("select timestamp, pair, best_ask, best_bid from at_prices where timestamp > ? and timestamp <= ? order by timestamp");
-            pricesBatchStmt.setLong(1, lastProcessedTimestamp);
-            pricesBatchStmt.setLong(2, timestampUntil);
-            ResultSet pricesBatchRs = pricesBatchStmt.executeQuery();
-            log.info("pricesBatch query executed");
-
-            lastProcessedTimestamp = timestampUntil;
-
-            priceList = new ArrayList<>();
-
-            // put price records to array
-            while (pricesBatchRs.next()) {
-                priceList.add(new PairPriceSlice(
-                        pricesBatchRs.getLong(1),
-                        pricesBatchRs.getString(2),
-                        pricesBatchRs.getBigDecimal(3),
-                        pricesBatchRs.getBigDecimal(4)
-                ));
-            }
-            pricesBatchRs.close();
-            log.info("priceList size=" + priceList.size());
-
-            // find pair objects for each record
-            String pairNameDb;
-            for (int i = 0; i < priceList.size(); i++) {
-                pairNameDb = priceList.get(i).getPairNameDb();
-                for (int j = 0; j < Global.baseTokensStrList.size(); j++) {
-                    String baseTokenStr = Global.baseTokensStrList.get(j);
-                    if (pairNameDb.endsWith(baseTokenStr)) {
-                        priceList.get(i).setPair(Global.findPairByTokenNames(pairNameDb.split(baseTokenStr)[0], baseTokenStr).get());
-                        break;
-                    }
+            if (priceList.isEmpty()) {
+                Long nextMinTs = findNextMinTimestamp(timestampUntil);
+                if (nextMinTs == null) {
+                    log.info("no more records. end of processing");
+                    break; // exit
+                } else {
+                    lastProcessedTimestamp = nextMinTs-1; //
                 }
-                log.info("timestamp=" + priceList.get(i) + " pairNameDb=" + pairNameDb + " pair not found");
-            }
-            log.info("priceList pairs found");
-
-            //separate by timestamp
-            List<PairPriceSlice> ppsTs = new ArrayList<>();
-            Long prevTs = 0l;
-            for (PairPriceSlice pps : priceList) {
-                if (prevTs != 0 && pps.getTimestamp() != prevTs) {
-                    // process bunch
-                    processTimestampBunch(ppsTs);
-                    ppsTs.clear();
-                    break;// for testing on one bunch
-                }
-                ppsTs.add(pps);
-                prevTs = pps.getTimestamp();
+            } else {
+                findPairObjects(priceList);
+                processSelectedBunch(priceList);
+                lastProcessedTimestamp = timestampUntil;
             }
 
-            Statement updateTsStmt = conn.createStatement();
-            updateTsStmt.executeUpdate("insert into worker_state(key, value) values ('last_processed_price_timestamp', ?) on conflict(key) do update set value = ? where key = 'last_processed_price_timestamp';");
-
+            recCount = recCount + priceList.size();
+            updateLastProcessedTimestamp(lastProcessedTimestamp);
+            break; // for test on one selection
         }
-
-        /*
-        * we need app property - last processed by calc routes timestamp
-        * we need table - with profits found
-        *
-        * connect worker db
-        *
-        * if "last processed timestamp" property found, start with saved value. otherwise start with 0 value
-        * find min timestamp greater then last processed timestamp.
-        * if no such timestamp found - finish processing
-        * fetch all price records with current timestamp
-        * for each route
-        *   fill price array for each token pairs
-        *   if any price item not exist - exclude route calc for current timestamp
-        *   calc route for current timestamp
-        *       if profit found - add record to profits table
-        * update "last processed timestamp" property
-        *
-        * */
-
-
 
         GlobalResources.closeWorkerDbConnection();
+        log.info("records processed = " + recCount);
         log.info("CalcDBRoutesProfitApp finish");
     }
 
@@ -152,7 +76,10 @@ public class CalcDBRoutesProfitApp {
         // read property "last processed timestamp"
         Statement readLastProcessedStmt = conn.createStatement();
         ResultSet readLastProcessedRs = readLastProcessedStmt.executeQuery("select value from worker_state where key = 'last_processed_price_timestamp'");
-        long lastProcessedTimestamp = readLastProcessedRs.next() ? Long.valueOf(readLastProcessedRs.getString(1)) : 0l;
+        Long lastProcessedTimestamp = 0l;
+        if (readLastProcessedRs.next() && readLastProcessedRs.getString(1) != null) {
+            lastProcessedTimestamp = Long.valueOf(readLastProcessedRs.getString(1));
+        }
         log.info("lastProcessedTimestamp=" + lastProcessedTimestamp);
         readLastProcessedRs.close();
         return lastProcessedTimestamp;
@@ -163,7 +90,7 @@ public class CalcDBRoutesProfitApp {
         pricesBatchStmt.setLong(1, timestampStart);
         pricesBatchStmt.setLong(2, timestampEnd);
         ResultSet pricesBatchRs = pricesBatchStmt.executeQuery();
-        log.info("pricesBatch query executed");
+        log.debug("pricesBatch query executed");
 
         List<PairPriceSlice> priceList = new ArrayList<>();
 
@@ -177,12 +104,77 @@ public class CalcDBRoutesProfitApp {
             ));
         }
         pricesBatchRs.close();
-        log.info("priceList size=" + priceList.size());
+        log.debug("priceList size=" + priceList.size());
         return priceList;
+    }
+
+    private static Long findNextMinTimestamp(Long prevTimestamp) throws SQLException {
+        log.debug("finding next min timestamp");
+        PreparedStatement minTsStmt = conn.prepareStatement("select min(timestamp) from at_prices where timestamp > ?");
+        minTsStmt.setLong(1, prevTimestamp);
+        ResultSet minTsRs = minTsStmt.executeQuery();
+        Long nextMinTimestamp = null;
+        if (minTsRs.next()) {
+            nextMinTimestamp = minTsRs.getLong(1);
+        }
+        log.debug("next min timestamp found = " + nextMinTimestamp);
+        return nextMinTimestamp;
+    }
+
+    private static void findPairObjects(List<PairPriceSlice> priceList) {
+        // find pair objects for each record
+        String pairNameDb;
+        for (int i = 0; i < priceList.size(); i++) {
+            pairNameDb = priceList.get(i).getPairNameDb();
+            log.debug("pairNameDb="+pairNameDb);
+            for (int j = 0; j < Global.baseTokensStrList.size(); j++) {
+                String baseTokenStr = Global.baseTokensStrList.get(j);
+                log.debug("baseTokenStr="+baseTokenStr);
+                if (pairNameDb.endsWith(baseTokenStr)) {
+                    String firstTokenStr = pairNameDb.split(baseTokenStr)[0];
+                    log.debug("firstTokenStr="+firstTokenStr);
+                    priceList.get(i).setPair(Global.findPairByTokenNames(firstTokenStr, baseTokenStr).get());
+                    break;
+                }
+            }
+            if (priceList.get(i).getPair() == null) {
+                log.warn("timestamp=" + priceList.get(i).getTimestamp() + " pairNameDb=" + pairNameDb + " pair not found");
+            } else {
+                log.debug("timestamp=" + priceList.get(i).getTimestamp() + " pairNameDb=" + pairNameDb + " pair found");
+            }
+        }
+        log.debug("priceList pairs found");
+    }
+
+
+    private static void processSelectedBunch(List<PairPriceSlice> priceList) {
+        //separate by timestamp
+        List<PairPriceSlice> ppsTs = new ArrayList<>();
+        Long prevTs = 0l;
+        for (PairPriceSlice pps : priceList) {
+            if (prevTs != 0 && pps.getTimestamp() != prevTs) {
+                // process bunch
+                processTimestampBunch(ppsTs);
+                ppsTs.clear();
+                return; // for testing on one bunch
+            }
+            ppsTs.add(pps);
+            prevTs = pps.getTimestamp();
+        }
     }
 
     private static void processTimestampBunch(List<PairPriceSlice> pps) {
         log.info("processTsBunch start");
+    }
+
+    private static void updateLastProcessedTimestamp(Long lastProcessedTimestamp) throws SQLException {
+        //update last processed timestamp in db
+        PreparedStatement updateTsStmt = conn.prepareStatement("insert into worker_state(key, value) values ('last_processed_price_timestamp', ?) on conflict(key) do update set value = ? where key = 'last_processed_price_timestamp';");
+        updateTsStmt.setLong(1, lastProcessedTimestamp);
+        updateTsStmt.setLong(2, lastProcessedTimestamp);
+        updateTsStmt.executeUpdate();
+        conn.commit();
+        log.debug("lastProcessedTimestamp set to " + lastProcessedTimestamp);
     }
 
 }

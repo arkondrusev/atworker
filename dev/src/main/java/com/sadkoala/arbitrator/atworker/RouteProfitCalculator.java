@@ -1,10 +1,14 @@
 package com.sadkoala.arbitrator.atworker;
 
 import com.sadkoala.arbitrator.atworker.model.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
 public class RouteProfitCalculator {
+
+    private static final Logger log = LogManager.getLogger(RouteProfitCalculator.class);
 
     public static RoutePriceSliceProfit calcRouteProfit(StockExchange stockExchange, Route route, List<PairPriceSlice> priceSliceList) {
         BigDecimal2 tradeFeeMultiplier = BigDecimal2.ONE.subtract(stockExchange.getTradeFee());
@@ -20,7 +24,7 @@ public class RouteProfitCalculator {
             destToken = (i == lastIndex) ? routeTokenList.get(0) : routeTokenList.get(i+1);
             money = doTrade(sourceToken, destToken, money, tradeFeeMultiplier, priceSliceList.get(i));
         }
-
+        log.debug("money=" + money.toString());
         RoutePriceSliceProfit routeProfit = null;
         if (moneyStart.compareTo(money) < 0) {
             BigDecimal2 profitPct = money.subtract(moneyStart).divide(moneyStart);

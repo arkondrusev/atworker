@@ -17,14 +17,14 @@ public class CalcDBRoutesProfitApp {
 
     private static final String TABLE_NAME_ROUTE_PROFITS = "at_profit";
     private static final String SQL_CHECK_ROUTE_PROFITS_TABLE_EXISTS = "select name from sqlite_master where type='table' and name='" + TABLE_NAME_ROUTE_PROFITS + "'";
-    private static String tableNamePrices = "at_price";
+    private static String tableNamePrices = "at_prices";
     private static Integer timestampRangeHours = 3;
 
     public static void main(String[] args) throws SQLException {
 
         log.info("CalcDBRoutesProfitApp start");
 
-        conn = GlobalResources.openWorkerDbConnection("db/atworkertest.db", false);
+        conn = GlobalResources.openWorkerDbConnection("db/atworker.db", false);
         checkRouteProfitTableExists();
         Long lastProcessedTimestamp = readLastProcessedTimestamp();
 
@@ -36,7 +36,7 @@ public class CalcDBRoutesProfitApp {
 
             if (priceList.isEmpty()) {
                 Long nextMinTs = findNextMinTimestamp(timestampUntil);
-                if (nextMinTs == null) {
+                if (nextMinTs == 0) {
                     log.info("no more records. end of processing");
                     break; // exit
                 } else {
@@ -50,7 +50,7 @@ public class CalcDBRoutesProfitApp {
 
             recCount = recCount + priceList.size();
             updateLastProcessedTimestamp(lastProcessedTimestamp);
-            break; // for test on one selection
+            //break; // for test on one selection
         }
 
         GlobalResources.closeWorkerDbConnection();
@@ -114,10 +114,7 @@ public class CalcDBRoutesProfitApp {
         PreparedStatement minTsStmt = conn.prepareStatement("select min(timestamp) from " + tableNamePrices + " where timestamp > ?");
         minTsStmt.setLong(1, prevTimestamp);
         ResultSet minTsRs = minTsStmt.executeQuery();
-        Long nextMinTimestamp = null;
-        if (minTsRs.next()) {
-            nextMinTimestamp = minTsRs.getLong(1);
-        }
+        Long nextMinTimestamp = minTsRs.next() ? minTsRs.getLong(1) : 0;
         log.debug("next min timestamp found = " + nextMinTimestamp);
         return nextMinTimestamp;
     }
@@ -141,7 +138,7 @@ public class CalcDBRoutesProfitApp {
                 }
             }
             if (slice.getPair() == null) {
-                log.warn("timestamp=" + slice.getTimestamp() + " pairNameDb=" + pairNameDb + " pair not found");
+                log.debug("timestamp=" + slice.getTimestamp() + " pairNameDb=" + pairNameDb + " pair not found");
             } else {
                 log.debug("timestamp=" + slice.getTimestamp() + " pairNameDb=" + pairNameDb + " pair found");
             }
@@ -167,7 +164,7 @@ public class CalcDBRoutesProfitApp {
     }
 
     private static void processTimestampBunch(List<PairPriceSlice> ppsList) {
-        log.info("processTsBunch start");
+        log.debug("processTsBunch start");
 
         List<PairPriceSlice> routePpsList = new ArrayList<>();
         PairPriceSlice routePps;
@@ -184,20 +181,21 @@ public class CalcDBRoutesProfitApp {
                     }
                 }
                 if (routePps == null) {
-                    log.info("not found pps for route " + route.getName() + " pair " + pair.getName() + " timestamp " + ppsList.get(0).getTimestamp());
+                    log.debug("not found pps for route " + route.getName() + " pair " + pair.getName() + " timestamp " + ppsList.get(0).getTimestamp());
                     continue routelabel;
                 } else {
                     routePpsList.add(routePps);
                 }
             }
-            log.debug("starting profit calculator for route " + route.getName() + " routePpsList size " + routePpsList.size());
+            log.debug("starting profit calculator for route " + route.getName() + " routePpsList "
+                    + routePpsList.get(0).getPairNameDb() + " " + routePpsList.get(1).getPairNameDb() + " " + routePpsList.get(2).getPairNameDb());
             RoutePriceSliceProfit profit = RouteProfitCalculator.calcRouteProfit(Global.stockExchange, route, routePpsList);
             if (profit != null) {
                 log.info("profit detected");// save to db
             }
         }
 
-        log.info("processTsBunch end");
+        log.debug("processTsBunch end");
     }
 
     private static void updateLastProcessedTimestamp(Long lastProcessedTimestamp) throws SQLException {

@@ -1,12 +1,13 @@
 package com.sadkoala.arbitrator.atworker;
 
-import com.sadkoala.arbitrator.atworker.model.PairPriceSlice;
+import com.sadkoala.arbitrator.atworker.model.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CalcDBRoutesProfitApp {
 
@@ -15,22 +16,22 @@ public class CalcDBRoutesProfitApp {
     private static Connection conn = null;
 
     private static final String TABLE_NAME_ROUTE_PROFITS = "at_profit";
-
     private static final String SQL_CHECK_ROUTE_PROFITS_TABLE_EXISTS = "select name from sqlite_master where type='table' and name='" + TABLE_NAME_ROUTE_PROFITS + "'";
+    private static String tableNamePrices = "at_price";
+    private static Integer timestampRangeHours = 3;
 
     public static void main(String[] args) throws SQLException {
 
         log.info("CalcDBRoutesProfitApp start");
 
-        conn = GlobalResources.openWorkerDbConnection("db/atworker.db", false);
+        conn = GlobalResources.openWorkerDbConnection("db/atworkertest.db", false);
         checkRouteProfitTableExists();
         Long lastProcessedTimestamp = readLastProcessedTimestamp();
 
-        int hours = 3;
-        Long recCount = 0l;
+        Long recCount = 0L;
 
         while (true) {
-            Long timestampUntil = lastProcessedTimestamp + hours*3600000;
+            Long timestampUntil = lastProcessedTimestamp + timestampRangeHours*3600000;
             List<PairPriceSlice> priceList = readPairPrices(lastProcessedTimestamp, timestampUntil);
 
             if (priceList.isEmpty()) {
@@ -39,7 +40,7 @@ public class CalcDBRoutesProfitApp {
                     log.info("no more records. end of processing");
                     break; // exit
                 } else {
-                    lastProcessedTimestamp = nextMinTs-1; //
+                    lastProcessedTimestamp = nextMinTs-1;
                 }
             } else {
                 findPairObjects(priceList);
@@ -76,7 +77,7 @@ public class CalcDBRoutesProfitApp {
         // read property "last processed timestamp"
         Statement readLastProcessedStmt = conn.createStatement();
         ResultSet readLastProcessedRs = readLastProcessedStmt.executeQuery("select value from worker_state where key = 'last_processed_price_timestamp'");
-        Long lastProcessedTimestamp = 0l;
+        Long lastProcessedTimestamp = 0L;
         if (readLastProcessedRs.next() && readLastProcessedRs.getString(1) != null) {
             lastProcessedTimestamp = Long.valueOf(readLastProcessedRs.getString(1));
         }
@@ -86,7 +87,7 @@ public class CalcDBRoutesProfitApp {
     }
 
     private static List<PairPriceSlice> readPairPrices(Long timestampStart, Long timestampEnd) throws SQLException {
-        PreparedStatement pricesBatchStmt = conn.prepareStatement("select timestamp, pair, best_ask, best_bid from at_prices where timestamp > ? and timestamp <= ? order by timestamp");
+        PreparedStatement pricesBatchStmt = conn.prepareStatement("select timestamp, pair, best_ask, best_bid from " + tableNamePrices + " where timestamp > ? and timestamp <= ? order by timestamp");
         pricesBatchStmt.setLong(1, timestampStart);
         pricesBatchStmt.setLong(2, timestampEnd);
         ResultSet pricesBatchRs = pricesBatchStmt.executeQuery();
@@ -99,8 +100,8 @@ public class CalcDBRoutesProfitApp {
             priceList.add(new PairPriceSlice(
                     pricesBatchRs.getLong(1),
                     pricesBatchRs.getString(2),
-                    pricesBatchRs.getBigDecimal(3),
-                    pricesBatchRs.getBigDecimal(4)
+                    new BigDecimal2(pricesBatchRs.getString(3)),
+                    new BigDecimal2(pricesBatchRs.getString(4))
             ));
         }
         pricesBatchRs.close();
@@ -110,7 +111,7 @@ public class CalcDBRoutesProfitApp {
 
     private static Long findNextMinTimestamp(Long prevTimestamp) throws SQLException {
         log.debug("finding next min timestamp");
-        PreparedStatement minTsStmt = conn.prepareStatement("select min(timestamp) from at_prices where timestamp > ?");
+        PreparedStatement minTsStmt = conn.prepareStatement("select min(timestamp) from " + tableNamePrices + " where timestamp > ?");
         minTsStmt.setLong(1, prevTimestamp);
         ResultSet minTsRs = minTsStmt.executeQuery();
         Long nextMinTimestamp = null;
@@ -124,47 +125,79 @@ public class CalcDBRoutesProfitApp {
     private static void findPairObjects(List<PairPriceSlice> priceList) {
         // find pair objects for each record
         String pairNameDb;
-        for (int i = 0; i < priceList.size(); i++) {
-            pairNameDb = priceList.get(i).getPairNameDb();
+        for (PairPriceSlice slice : priceList) {
+            pairNameDb = slice.getPairNameDb();
             log.debug("pairNameDb="+pairNameDb);
-            for (int j = 0; j < Global.baseTokensStrList.size(); j++) {
-                String baseTokenStr = Global.baseTokensStrList.get(j);
+            for (String baseTokenStr : Global.baseTokensStrList) {
                 log.debug("baseTokenStr="+baseTokenStr);
                 if (pairNameDb.endsWith(baseTokenStr)) {
                     String firstTokenStr = pairNameDb.split(baseTokenStr)[0];
                     log.debug("firstTokenStr="+firstTokenStr);
-                    priceList.get(i).setPair(Global.findPairByTokenNames(firstTokenStr, baseTokenStr).get());
+                    Optional<Pair> pairOpt = Global.findPairByTokenNames(firstTokenStr, baseTokenStr);
+                    if (pairOpt.isPresent()) {
+                        slice.setPair(pairOpt.get());
+                    }
                     break;
                 }
             }
-            if (priceList.get(i).getPair() == null) {
-                log.warn("timestamp=" + priceList.get(i).getTimestamp() + " pairNameDb=" + pairNameDb + " pair not found");
+            if (slice.getPair() == null) {
+                log.warn("timestamp=" + slice.getTimestamp() + " pairNameDb=" + pairNameDb + " pair not found");
             } else {
-                log.debug("timestamp=" + priceList.get(i).getTimestamp() + " pairNameDb=" + pairNameDb + " pair found");
+                log.debug("timestamp=" + slice.getTimestamp() + " pairNameDb=" + pairNameDb + " pair found");
             }
         }
         log.debug("priceList pairs found");
     }
 
-
     private static void processSelectedBunch(List<PairPriceSlice> priceList) {
         //separate by timestamp
         List<PairPriceSlice> ppsTs = new ArrayList<>();
-        Long prevTs = 0l;
+        Long prevTs = 0L;
         for (PairPriceSlice pps : priceList) {
-            if (prevTs != 0 && pps.getTimestamp() != prevTs) {
+            if (prevTs != 0 && !pps.getTimestamp().equals(prevTs)) {
                 // process bunch
                 processTimestampBunch(ppsTs);
                 ppsTs.clear();
-                return; // for testing on one bunch
+                //return; // for testing on one bunch
             }
             ppsTs.add(pps);
             prevTs = pps.getTimestamp();
         }
+        processTimestampBunch(ppsTs); // for the last timestamp bunch in the selected bunch
     }
 
-    private static void processTimestampBunch(List<PairPriceSlice> pps) {
+    private static void processTimestampBunch(List<PairPriceSlice> ppsList) {
         log.info("processTsBunch start");
+
+        List<PairPriceSlice> routePpsList = new ArrayList<>();
+        PairPriceSlice routePps;
+        routelabel:
+        for (Route route : Global.routeList) {
+            // find route price slice list
+            routePpsList.clear();
+            for (Pair pair : route.getPairList()) {
+                routePps = null;
+                for (PairPriceSlice pps : ppsList) {
+                    if (pair.getId().equals(pps.getPair().getId())) {
+                        routePps = pps;
+                        break;
+                    }
+                }
+                if (routePps == null) {
+                    log.info("not found pps for route " + route.getName() + " pair " + pair.getName() + " timestamp " + ppsList.get(0).getTimestamp());
+                    continue routelabel;
+                } else {
+                    routePpsList.add(routePps);
+                }
+            }
+            log.debug("starting profit calculator for route " + route.getName() + " routePpsList size " + routePpsList.size());
+            RoutePriceSliceProfit profit = RouteProfitCalculator.calcRouteProfit(Global.stockExchange, route, routePpsList);
+            if (profit != null) {
+                log.info("profit detected");// save to db
+            }
+        }
+
+        log.info("processTsBunch end");
     }
 
     private static void updateLastProcessedTimestamp(Long lastProcessedTimestamp) throws SQLException {

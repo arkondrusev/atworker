@@ -34,13 +34,13 @@ public class RouteProfitCalculatorTest {
         Assertions.assertNull(routePriceSliceProfit);
 
         priceSliceList = new ArrayList<>();
-        pairPriceSlice = new PairPriceSlice(1659702901492l, "ethusdt", new BigDecimal2("0.9"), new BigDecimal2("0.7"));
+        pairPriceSlice = new PairPriceSlice(1659702901492L, "ethusdt", new BigDecimal2("0.9"), new BigDecimal2("0.7"));
         pairPriceSlice.setPair(Global.findPairByTokenNames("ETH", "USDT").get());
         priceSliceList.add(pairPriceSlice);
-        pairPriceSlice = new PairPriceSlice(1659702901492l, "ethbtc", new BigDecimal2("1.2"), new BigDecimal2("1"));
+        pairPriceSlice = new PairPriceSlice(1659702901492L, "ethbtc", new BigDecimal2("1.2"), new BigDecimal2("1"));
         pairPriceSlice.setPair(Global.findPairByTokenNames("ETH", "BTC").get());
         priceSliceList.add(pairPriceSlice);
-        pairPriceSlice = new PairPriceSlice(1659702901492l, "btcusdt", new BigDecimal2("1.2"), new BigDecimal2("1"));
+        pairPriceSlice = new PairPriceSlice(1659702901492L, "btcusdt", new BigDecimal2("1.2"), new BigDecimal2("1"));
         pairPriceSlice.setPair(Global.findPairByTokenNames("BTC", "USDT").get());
         priceSliceList.add(pairPriceSlice);
         routePriceSliceProfit = RouteProfitCalculator.calcRouteProfit(Global.stockExchange,

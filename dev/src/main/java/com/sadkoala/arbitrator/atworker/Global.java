@@ -38,6 +38,10 @@ public class Global {
         Token eth = addToken("ETH");
         Token ada = addToken("ADA");
         Token ltc = addToken("LTC");
+        Token xrp = addToken("XRP");
+        Token sol = addToken("SOL");
+        Token atom = addToken("ATOM");
+
 
         addPair(btc, usdt);
         addPair(ada, btc);
@@ -45,9 +49,23 @@ public class Global {
         addPair(eth, usdt);
         addPair(eth, btc);
         addPair(ada, eth);
+
         addPair(ltc, usdt);
         addPair(ltc, btc);
         addPair(ltc, eth);
+
+        addPair(xrp, usdt);
+        addPair(xrp, btc);
+        addPair(xrp, eth);
+
+        addPair(sol, usdt);
+        addPair(sol, btc);
+        addPair(sol, eth);
+
+        addPair(atom, usdt);
+        addPair(atom, btc);
+        addPair(atom, eth);
+
 
         addRoute(usdt, eth, btc);
         addRoute(usdt, btc, eth);
@@ -59,6 +77,19 @@ public class Global {
         addRoute(btc, eth, ada);
         addRoute(btc, ltc, eth);
         addRoute(btc, eth, ltc);
+
+        addRoute(usdt, xrp, btc);
+        addRoute(usdt, xrp, eth);
+        addRoute(btc, xrp, eth);
+
+        addRoute(usdt, sol, btc);
+        addRoute(usdt, sol, eth);
+        addRoute(btc, sol, eth);
+
+        addRoute(usdt, atom, btc);
+        addRoute(usdt, atom, eth);
+        addRoute(btc, atom, eth);
+
     }
 
     public static synchronized Token addToken(String name) {

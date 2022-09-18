@@ -16,6 +16,19 @@ public class PairBookTickersHolder {
         pairBookTickers.put("ltcusdt", new PairBookTicker("ltcusdt"));
         pairBookTickers.put("ltcbtc", new PairBookTicker("ltcbtc"));
         pairBookTickers.put("ltceth", new PairBookTicker("ltceth"));
+
+        pairBookTickers.put("xrpusdt", new PairBookTicker("xrpusdt"));
+        pairBookTickers.put("xrpbtc", new PairBookTicker("xrpbtc"));
+        pairBookTickers.put("xrpeth", new PairBookTicker("xrpeth"));
+
+        pairBookTickers.put("solusdt", new PairBookTicker("solusdt"));
+        pairBookTickers.put("solbtc", new PairBookTicker("solbtc"));
+        pairBookTickers.put("soleth", new PairBookTicker("soleth"));
+
+        pairBookTickers.put("atomusdt", new PairBookTicker("atomusdt"));
+        pairBookTickers.put("atombtc", new PairBookTicker("atombtc"));
+        pairBookTickers.put("atometh", new PairBookTicker("atometh"));
+
     }
 
     private static boolean updated = false;

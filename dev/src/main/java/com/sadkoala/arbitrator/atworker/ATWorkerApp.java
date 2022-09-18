@@ -93,7 +93,7 @@ public class ATWorkerApp {
         Thread savePricesThread = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     log.error(ExceptionUtils.getStackTrace(e));
                 }
@@ -192,7 +192,7 @@ public class ATWorkerApp {
 
         WebSocket.Listener wsListener = new SocketListener();
 
-        String wsUri = "wss://stream.binance.com:9443/stream?streams=btcusdt@bookTicker/adausdt@bookTicker/adabtc@bookTicker/ethusdt@bookTicker/ethbtc@bookTicker/adaeth@bookTicker/ltcusdt@bookTicker/ltcbtc@bookTicker/ltceth@bookTicker";
+        String wsUri = "wss://stream.binance.com:9443/stream?streams=btcusdt@bookTicker/adausdt@bookTicker/adabtc@bookTicker/ethusdt@bookTicker/ethbtc@bookTicker/adaeth@bookTicker/ltcusdt@bookTicker/ltcbtc@bookTicker/ltceth@bookTicker/xrpusdt@bookTicker/xrpbtc@bookTicker/xrpeth@bookTicker/solusdt@bookTicker/solbtc@bookTicker/soleth@bookTicker/atomusdt@bookTicker/atombtc@bookTicker/atometh@bookTicker";
 
         WebSocket webSocket = null;
         try {

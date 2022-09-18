@@ -191,7 +191,7 @@ public class CalcDBRoutesProfitApp {
                     + routePpsList.get(0).getPairNameDb() + " " + routePpsList.get(1).getPairNameDb() + " " + routePpsList.get(2).getPairNameDb());
             RoutePriceSliceProfit profit = RouteProfitCalculator.calcRouteProfit(Global.stockExchange, route, routePpsList);
             if (profit != null) {
-                log.info("profit detected");// save to db
+                log.info("profit detected. route: " + route.getName() + " time: " + new Timestamp(profit.getTimestamp()).toString() + " pct: " + profit.getProfitPct().toString());
             }
         }
 

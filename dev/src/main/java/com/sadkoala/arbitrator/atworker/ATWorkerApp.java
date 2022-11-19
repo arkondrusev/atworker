@@ -150,7 +150,7 @@ public class ATWorkerApp {
         }
         File atworkerStopFile = new File(GlobalResources.ATWORKER_STOP_FILE_PATH);
         if (atworkerStopFile.exists() && !atworkerStopFile.delete()) {
-            log.warn("Could not delete " + GlobalResources.ATWORKER_ACTIVE_FILE_PATH + " or file not exists");
+            log.warn("Could not delete " + GlobalResources.ATWORKER_STOP_FILE_PATH + " or file not exists");
         }
 
         log.info("Finish atworker end");
@@ -192,7 +192,19 @@ public class ATWorkerApp {
 
         WebSocket.Listener wsListener = new SocketListener();
 
-        String wsUri = "wss://stream.binance.com:9443/stream?streams=btcusdt@bookTicker/adausdt@bookTicker/adabtc@bookTicker/ethusdt@bookTicker/ethbtc@bookTicker/adaeth@bookTicker/ltcusdt@bookTicker/ltcbtc@bookTicker/ltceth@bookTicker/xrpusdt@bookTicker/xrpbtc@bookTicker/xrpeth@bookTicker/solusdt@bookTicker/solbtc@bookTicker/soleth@bookTicker/atomusdt@bookTicker/atombtc@bookTicker/atometh@bookTicker";
+        String wsUri = "wss://stream.binance.com:9443/stream?streams=" +
+                "btcusdt@bookTicker/adausdt@bookTicker/adabtc@bookTicker/" +
+                "ethusdt@bookTicker/ethbtc@bookTicker/adaeth@bookTicker/" +
+                "ltcusdt@bookTicker/ltcbtc@bookTicker/ltceth@bookTicker/" +
+                "xrpusdt@bookTicker/xrpbtc@bookTicker/xrpeth@bookTicker/" +
+                "solusdt@bookTicker/solbtc@bookTicker/soleth@bookTicker/" +
+                "atomusdt@bookTicker/atombtc@bookTicker/atometh@bookTicker/" +
+
+                "dogeusdt@bookTicker/dogebtc@bookTicker/dogemeth@bookTicker/" +
+                "maticusdt@bookTicker/maticbtc@bookTicker/maticmeth@bookTicker/" +
+                "dotusdt@bookTicker/dotbtc@bookTicker/doteth@bookTicker/" +
+                "trxusdt@bookTicker/trxbtc@bookTicker/trxeth@bookTicker/" +
+                "shibusdt@bookTicker/shibbtc@bookTicker/shibeth@bookTicker";
 
         WebSocket webSocket = null;
         try {

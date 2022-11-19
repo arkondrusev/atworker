@@ -42,12 +42,20 @@ public class Global {
         Token sol = addToken("SOL");
         Token atom = addToken("ATOM");
 
+        Token doge = addToken("DOGE");
+        Token matic = addToken("MATIC");
+        Token dot = addToken("DOT");
+        Token trx = addToken("TRX");
+        Token shib = addToken("SHIB");
+
 
         addPair(btc, usdt);
-        addPair(ada, btc);
-        addPair(ada, usdt);
+
         addPair(eth, usdt);
         addPair(eth, btc);
+
+        addPair(ada, usdt);
+        addPair(ada, btc);
         addPair(ada, eth);
 
         addPair(ltc, usdt);
@@ -66,6 +74,25 @@ public class Global {
         addPair(atom, btc);
         addPair(atom, eth);
 
+        addPair(doge, usdt);
+        addPair(doge, btc);
+        addPair(doge, eth);
+
+        addPair(matic, usdt);
+        addPair(matic, btc);
+        addPair(matic, eth);
+
+        addPair(dot, usdt);
+        addPair(dot, btc);
+        addPair(dot, eth);
+
+        addPair(trx, usdt);
+        addPair(trx, btc);
+        addPair(trx, eth);
+
+        addPair(shib, usdt);
+        addPair(shib, btc);
+        addPair(shib, eth);
 
         addRoute(usdt, eth, btc);
         addRoute(usdt, btc, eth);
@@ -89,6 +116,26 @@ public class Global {
         addRoute(usdt, atom, btc);
         addRoute(usdt, atom, eth);
         addRoute(btc, atom, eth);
+
+        addRoute(usdt, doge, btc);
+        addRoute(usdt, doge, eth);
+        addRoute(btc, doge, eth);
+
+        addRoute(usdt, matic, btc);
+        addRoute(usdt, matic, eth);
+        addRoute(btc, matic, eth);
+
+        addRoute(usdt, dot, btc);
+        addRoute(usdt, dot, eth);
+        addRoute(btc, dot, eth);
+
+        addRoute(usdt, trx, btc);
+        addRoute(usdt, trx, eth);
+        addRoute(btc, trx, eth);
+
+        addRoute(usdt, shib, btc);
+        addRoute(usdt, shib, eth);
+        addRoute(btc, shib, eth);
 
     }
 

@@ -8,6 +8,7 @@ public class Pair {
     private Token upperToken;
     private Token bottomToken;
     private String name; // calc
+    private Boolean active = true;
 
     public Pair(BigInteger id, Token upperToken, Token bottomToken) {
         this.id = id;
@@ -31,6 +32,14 @@ public class Pair {
 
     public String getName() {
         return name;
+    }
+
+    public Boolean isActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
 }

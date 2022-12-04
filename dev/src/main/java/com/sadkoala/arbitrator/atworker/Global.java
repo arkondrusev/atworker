@@ -12,12 +12,14 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Global {
 
     public static MathContext mathContext = new MathContext(6, RoundingMode.FLOOR);
 
-    public static StockExchange stockExchange = new StockExchange(BigInteger.ONE, "Binance", new BigDecimal("0.00075"));
+    private static List<StockExchange> seList = new ArrayList<>();
+
     public static List<Token> tokenList = new ArrayList<>();
     public static List<Pair> pairList = new ArrayList<>();
     public static List<Route> routeList = new ArrayList<>();
@@ -26,27 +28,64 @@ public class Global {
     private static BigInteger pairIdSeq = BigInteger.ZERO;
     private static BigInteger routeIdSeq = BigInteger.ZERO;
 
-    public static List<String> baseTokensStrList = new ArrayList<>();
-
     static {
-        baseTokensStrList.add("USDT");
-        baseTokensStrList.add("BTC");
-        baseTokensStrList.add("ETH");
+        StockExchange binanceSe = new StockExchange(BigInteger.ONE, "BINANCE", new BigDecimal("0.00075"), "/");
+        StockExchange okexSe = new StockExchange(BigInteger.TWO, "OKEX", new BigDecimal("0.001"), "-");
+        seList.add(binanceSe);
+        seList.add(okexSe);
 
         Token usdt = addToken("USDT");
+        binanceSe.addBaseToken(usdt);
+        okexSe.addBaseToken(usdt);
+
         Token btc = addToken("BTC");
+        binanceSe.addBaseToken(btc);
+        okexSe.addBaseToken(btc);
+
         Token eth = addToken("ETH");
+        binanceSe.addBaseToken(eth);
+        okexSe.addBaseToken(eth);
+
         Token ada = addToken("ADA");
+        binanceSe.addToken(ada);
+        okexSe.addToken(ada);
+
         Token ltc = addToken("LTC");
+        binanceSe.addToken(ltc);
+        okexSe.addToken(ltc);
+
         Token xrp = addToken("XRP");
+        binanceSe.addToken(xrp);
+        okexSe.addToken(xrp);
+
         Token sol = addToken("SOL");
+        binanceSe.addToken(sol);
+        okexSe.addToken(sol);
+
         Token atom = addToken("ATOM");
+        binanceSe.addToken(atom);
+        okexSe.addToken(atom);
 
         Token doge = addToken("DOGE");
+        binanceSe.addToken(doge);
+        okexSe.addToken(doge);
+
         Token matic = addToken("MATIC");
+        binanceSe.addToken(matic);
+        okexSe.addToken(matic);
+
         Token dot = addToken("DOT");
+        binanceSe.addToken(dot);
+        okexSe.addToken(dot);
+
         Token trx = addToken("TRX");
+        binanceSe.addToken(trx);
+        okexSe.addToken(trx);
+
         Token shib = addToken("SHIB");
+        binanceSe.addToken(shib);
+        okexSe.addToken(shib);
+
 
 
         addPair(btc, usdt);
@@ -204,6 +243,22 @@ public class Global {
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    public static Optional<StockExchange> findSeByName(String name) {
+        return seList.stream()
+                .filter(t -> t.getName().equals(name.toUpperCase()))
+                .findFirst();
+    }
+
+    public static List<StockExchange> getSeList() {
+        return getSeListFull().stream()
+                .filter(se -> se.isActive())
+                .collect(Collectors.toList());
+    }
+
+    public static List<StockExchange> getSeListFull() {
+        return seList;
     }
 
 }

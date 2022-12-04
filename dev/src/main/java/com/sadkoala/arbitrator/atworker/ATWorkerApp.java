@@ -1,5 +1,6 @@
 package com.sadkoala.arbitrator.atworker;
 
+import com.sadkoala.arbitrator.atworker.listeners.BinanceSocketListener;
 import com.sadkoala.arbitrator.atworker.thread.ManagerTask;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -190,7 +191,7 @@ public class ATWorkerApp {
 
         log.info("Opening new websocket");
 
-        WebSocket.Listener wsListener = new SocketListener();
+        WebSocket.Listener wsListener = new BinanceSocketListener();
 
         String wsUri = "wss://stream.binance.com:9443/stream?streams=" +
                 "btcusdt@bookTicker/adausdt@bookTicker/adabtc@bookTicker/" +

@@ -1,12 +1,12 @@
 package com.sadkoala.arbitrator.atworker.thread;
 
-import com.sadkoala.arbitrator.atworker.ATWorkerApp;
-import com.sadkoala.arbitrator.atworker.DbHelper;
-import com.sadkoala.arbitrator.atworker.GlobalResources;
-import com.sadkoala.arbitrator.atworker.PairBookTickersHolder;
+import com.sadkoala.arbitrator.atworker.*;
+import com.sadkoala.arbitrator.atworker.model.StockExchange;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.List;
 
 import static com.sadkoala.arbitrator.atworker.GlobalResources.webSocket;
 
@@ -52,6 +52,8 @@ public class ManagerTask implements Runnable {
     }
 
     private void checkWebsocket() {
+        List<StockExchange> seList = Global.seList;
+
         if (webSocket == null || webSocket.isInputClosed()) {
             String msg = "Websocket not exist or input stream closed";
             DbHelper.logMessage(msg);

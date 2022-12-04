@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sqlite.SQLiteConfig;
 
-import java.net.http.WebSocket;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -24,7 +23,6 @@ public class GlobalResources {
     public static final String ATWORKER_STOP_FILE_PATH = ".atworker_stop";
     private static Optional<Connection> monitorDbConnection = Optional.empty();
     private static Optional<Connection> workerDbConnection = Optional.empty();
-    public static WebSocket webSocket = null;
 
     public static Optional<Connection> getMonitorDbConnection() {
         return monitorDbConnection;
@@ -32,10 +30,6 @@ public class GlobalResources {
 
     public static Optional<Connection> getWorkerDbConnection() {
         return workerDbConnection;
-    }
-
-    public static Optional<WebSocket> getWebsocket() {
-        return Optional.ofNullable(webSocket);
     }
 
     public static Connection openMonitorDbConnection(String dbPath, boolean readonly) throws SQLException {

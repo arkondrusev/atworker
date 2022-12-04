@@ -189,7 +189,7 @@ public class CalcDBRoutesProfitApp {
             }
             log.debug("starting profit calculator for route " + route.getName() + " routePpsList "
                     + routePpsList.get(0).getPairNameDb() + " " + routePpsList.get(1).getPairNameDb() + " " + routePpsList.get(2).getPairNameDb());
-            RoutePriceSliceProfit profit = RouteProfitCalculator.calcRouteProfit(Global.stockExchange, route, routePpsList);
+            RoutePriceSliceProfit profit = RouteProfitCalculator.calcRouteProfit(Global.findSeByName("binance").get(), route, routePpsList);
             if (profit != null) {
                 log.info("profit detected. route: " + route.getName() + " time: " + new Timestamp(profit.getTimestamp()).toString() + " pct: " + profit.getProfitPct().toString());
             }
